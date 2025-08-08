@@ -1,8 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
+const COLORS = {
+  white: '#ffffff',
+  blue: '#162048',
+  black: '#1a1a1a'
+};
+
 const HomePage = () => {
-  // Sample data for posts
+  // Sample data for posts with real images
   const featuredPosts = [
     {
       id: 1,
@@ -10,7 +16,7 @@ const HomePage = () => {
       category: 'Technology',
       author: 'John Doe',
       date: 'August 4, 2023',
-      image: 'https://placehold.co/600x400',
+      image: 'https://images.unsplash.com/photo-1531746790731-6c087fecd65a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2000&q=80',
       excerpt: 'How AI is transforming our daily lives and what to expect in the coming years.'
     },
     {
@@ -19,7 +25,7 @@ const HomePage = () => {
       category: 'Travel',
       author: 'Jane Smith',
       date: 'August 2, 2023',
-      image: 'https://placehold.co/600x400',
+      image: 'https://images.unsplash.com/photo-1527631746610-bca00a040d60?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2000&q=80',
       excerpt: 'Explore the most beautiful and exciting places to visit this year.'
     },
     {
@@ -28,7 +34,7 @@ const HomePage = () => {
       category: 'Lifestyle',
       author: 'Mark Wilson',
       date: 'July 29, 2023',
-      image: 'https://placehold.co/600x400',
+      image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2000&q=80',
       excerpt: 'Simple ways to maintain a balanced diet despite your hectic schedule.'
     }
   ];
@@ -39,7 +45,7 @@ const HomePage = () => {
       title: 'Cryptocurrency Trends to Watch in 2023',
       category: 'Finance',
       date: 'July 30, 2023',
-      image: 'https://placehold.co/400x300',
+      image: 'https://images.unsplash.com/photo-1625217527288-3204044c0c04?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80',
       views: '24.5K'
     },
     {
@@ -47,7 +53,7 @@ const HomePage = () => {
       title: 'How Remote Work is Reshaping Urban Centers',
       category: 'Business',
       date: 'July 28, 2023',
-      image: 'https://placehold.co/400x300',
+      image: 'https://images.unsplash.com/photo-1568992687947-868a62a9f521?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80',
       views: '18.2K'
     },
     {
@@ -55,7 +61,7 @@ const HomePage = () => {
       title: 'The Rise of Plant-Based Diets: Health and Environmental Impact',
       category: 'Health',
       date: 'July 27, 2023',
-      image: 'https://placehold.co/400x300',
+      image: 'https://images.unsplash.com/photo-1540914124281-342587941389?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80',
       views: '16.8K'
     },
     {
@@ -63,7 +69,7 @@ const HomePage = () => {
       title: 'Smart Home Technology: Convenience vs Privacy Concerns',
       category: 'Technology',
       date: 'July 26, 2023',
-      image: 'https://placehold.co/400x300',
+      image: 'https://images.unsplash.com/photo-1593784991095-a205069470b6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80',
       views: '15.3K'
     }
   ];
@@ -74,42 +80,42 @@ const HomePage = () => {
       title: 'The Rise of Sustainable Fashion',
       category: 'Lifestyle',
       date: 'July 28, 2023',
-      image: 'https://placehold.co/300x200',
+      image: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80',
     },
     {
       id: 5,
       title: 'How Blockchain is Changing Finance',
       category: 'Business',
       date: 'July 27, 2023',
-      image: 'https://placehold.co/300x200',
+      image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80',
     },
     {
       id: 6,
       title: 'The Psychology of Color in Marketing',
       category: 'Business',
       date: 'July 26, 2023',
-      image: 'https://placehold.co/300x200',
+      image: 'https://images.unsplash.com/photo-1580554530778-ca36943938b2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80',
     },
     {
       id: 7,
       title: 'Best Smartphones of 2023',
       category: 'Technology',
       date: 'July 25, 2023',
-      image: 'https://placehold.co/300x200',
+      image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02ff9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80',
     },
     {
       id: 8,
       title: 'The Benefits of Mindfulness Meditation',
       category: 'Health',
       date: 'July 24, 2023',
-      image: 'https://placehold.co/300x200',
+      image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80',
     },
     {
       id: 9,
       title: 'Upcoming Movies to Watch This Summer',
       category: 'Entertainment',
       date: 'July 23, 2023',
-      image: 'https://placehold.co/300x200',
+      image: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80',
     }
   ];
 
@@ -180,41 +186,57 @@ const HomePage = () => {
   ];
 
   return (
-    <div>
-      {/* Hero Section with Slider */}
-      <section className="relative bg-cover bg-center h-[80vh]" style={{backgroundImage: "url('https://placehold.co/1920x1080')"}}>
-        <div className="absolute inset-0 bg-black opacity-50"></div>
+    <div className="bg-white">
+      {/* Hero Section */}
+      <section
+        className="relative bg-cover bg-center min-h-[400px] flex items-center"
+        style={{
+          backgroundImage:
+            "url('https://images.unsplash.com/photo-1470723710355-95304d8aece4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80')",
+        }}
+      >
+        <div className="absolute inset-0 bg-black opacity-60"></div>
         <div className="container mx-auto px-4 h-full flex items-center relative z-10">
-          <div className="max-w-3xl">
-            <span className="bg-red-600 text-white px-3 py-1 text-sm font-semibold rounded-md">Featured</span>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mt-4">The Impact of Climate Change on Global Economies</h1>
-            <p className="text-xl text-gray-200 mt-4">A comprehensive look at how climate change is affecting economic systems worldwide and what governments are doing about it.</p>
-            <div className="mt-6 flex items-center">
-              <img src="https://placehold.co/100x100" alt="Author" className="w-10 h-10 rounded-full" />
-              <div className="ml-3">
-                <span className="text-white font-medium">Alex Johnson</span>
-                <div className="flex items-center text-gray-300 text-sm">
+          <div className="max-w-2xl w-full bg-[#162048]/80 rounded-xl p-6 sm:p-10 shadow-xl">
+            <span className="bg-[#162048] text-white px-4 py-1 text-md font-bold rounded block w-fit mb-4 shadow">
+              Featured
+            </span>
+            <h1 className="text-2xl sm:text-3xl md:text-5xl font-extrabold text-white mt-2 leading-tight break-words drop-shadow">
+              The Impact of Climate Change on Global Economies
+            </h1>
+            <p className="text-base sm:text-lg md:text-xl text-gray-200 mt-4 break-words">
+              A comprehensive look at how climate change is affecting economic systems worldwide and what governments are doing about it.
+            </p>
+            <div className="mt-6 flex items-center gap-4">
+              <img
+                src="https://images.unsplash.com/photo-1603415526960-f7e0328c63b1?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80"
+                alt="Author"
+                className="w-12 h-12 sm:w-14 sm:h-14 rounded-full border-4 border-[#162048] shadow"
+              />
+              <div>
+                <span className="text-white font-bold text-base sm:text-xl block">Alex Johnson</span>
+                <div className="flex items-center text-white text-sm sm:text-md">
                   <span>August 5, 2023</span>
                   <span className="mx-2">•</span>
                   <span>8 min read</span>
                 </div>
               </div>
             </div>
-            <Link 
-              to="/article/1" 
-              className="mt-8 inline-block bg-red-600 text-white px-6 py-3 rounded-md hover:bg-red-700 transition-colors"
+            <Link
+              to="/article/1"
+              className="mt-6 inline-block bg-white text-[#162048] px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-xl font-bold rounded-md border-2 border-[#162048] hover:bg-[#162048] hover:text-white transition-colors shadow"
             >
               Read Article
             </Link>
           </div>
         </div>
-        
-        {/* Slider Navigation (dots) */}
-        <div className="absolute bottom-8 left-0 right-0 flex justify-center space-x-3">
-          {[1, 2, 3].map(index => (
-            <button 
-              key={index} 
-              className={`w-3 h-3 rounded-full ${index === 1 ? 'bg-red-600' : 'bg-white bg-opacity-50'}`}
+        <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-3">
+          {[1, 2, 3].map((index) => (
+            <button
+              key={index}
+              className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full border-2 border-white ${
+                index === 1 ? "bg-[#162048] border-[#162048]" : "bg-transparent"
+              }`}
               aria-label={`Go to slide ${index}`}
             ></button>
           ))}
@@ -222,92 +244,40 @@ const HomePage = () => {
       </section>
 
       {/* Latest News Section */}
-      <section className="py-16">
+      <section className="py-16 border-b-8 border-[#1a1a1a] bg-white">
         <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-10">
-            <h2 className="text-3xl font-bold flex items-center">
-              <span className="w-10 h-1 bg-red-600 inline-block mr-4"></span>
+          <div className="flex flex-col md:flex-row justify-between items-center mb-12 border-b-4 border-[#162048] pb-4">
+            <h2 className="text-3xl md:text-4xl font-extrabold flex items-center text-[#162048]">
+              <span className="w-10 h-1 bg-[#162048] inline-block mr-4 rounded"></span>
               Latest News
             </h2>
-            <Link to="/category/news" className="text-red-600 hover:text-red-700 font-medium flex items-center">
-              View All 
-              <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+            <Link to="/category/news" className="text-[#162048] hover:text-[#1a1a1a] font-bold text-lg md:text-xl flex items-center">
+              View All
+              <svg className="w-6 h-6 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
               </svg>
             </Link>
           </div>
-          
-          {/* Latest News Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {latestNews.slice(0, 6).map((post, index) => (
-              <div key={post.id} className={index === 0 ? "lg:col-span-2 lg:row-span-2" : ""}>
-                <div className={`bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow ${index === 0 ? 'h-full' : ''}`}>
-                  <div className="relative">
-                    <Link to={`/article/${post.id}`}>
-                      <img 
-                        src={post.image} 
-                        alt={post.title} 
-                        className={`w-full object-cover ${index === 0 ? 'h-80' : 'h-56'}`} 
-                      />
-                    </Link>
-                    <span className="absolute top-4 left-4 bg-red-600 text-white px-3 py-1 text-xs font-semibold rounded-md">
-                      {post.category}
-                    </span>
-                  </div>
-                  <div className="p-6">
-                    <Link to={`/article/${post.id}`}>
-                      <h3 className={`font-bold hover:text-red-600 transition-colors ${index === 0 ? 'text-2xl' : 'text-lg'}`}>{post.title}</h3>
-                    </Link>
-                    <div className="mt-4 flex items-center text-gray-500 text-sm">
-                      <span>{post.date}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Trending Section */}
-      <section className="py-16 bg-gray-100">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-10">
-            <h2 className="text-3xl font-bold flex items-center">
-              <span className="w-10 h-1 bg-red-600 inline-block mr-4"></span>
-              Trending Now
-            </h2>
-            <Link to="/trending" className="text-red-600 hover:text-red-700 font-medium flex items-center">
-              View All 
-              <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
-              </svg>
-            </Link>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {trendingPosts.map(post => (
-              <div key={post.id} className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+              <div key={post.id} className="bg-white border-2 border-[#162048] rounded-xl overflow-hidden hover:shadow-lg transition-shadow">
                 <div className="relative">
                   <Link to={`/article/${post.id}`}>
-                    <img src={post.image} alt={post.title} className="w-full h-48 object-cover" />
+                    <img
+                      src={post.image}
+                      alt={post.title}
+                      className="w-full h-56 object-cover"
+                    />
                   </Link>
-                  <span className="absolute top-4 left-4 bg-red-600 text-white px-3 py-1 text-xs font-semibold rounded-md">
+                  <span className="absolute top-4 left-4 bg-[#162048] text-white px-3 py-1 text-sm font-bold rounded shadow">
                     {post.category}
                   </span>
-                  <div className="absolute bottom-4 right-4 bg-black bg-opacity-75 text-white px-2 py-1 text-xs rounded-md flex items-center">
-                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                    </svg>
-                    {post.views}
-                  </div>
                 </div>
                 <div className="p-6">
                   <Link to={`/article/${post.id}`}>
-                    <h3 className="font-bold text-lg hover:text-red-600 transition-colors">{post.title}</h3>
+                    <h3 className="font-extrabold text-xl hover:text-[#162048] transition-colors text-[#1a1a1a]">{post.title}</h3>
                   </Link>
-                  <div className="mt-4 flex items-center text-gray-500 text-sm">
+                  <div className="mt-4 flex items-center text-[#162048] font-bold">
                     <span>{post.date}</span>
                   </div>
                 </div>
@@ -317,30 +287,76 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Discover Categories Section */}
-      <section className="py-16">
+      {/* Trending Section */}
+      <section className="py-16 bg-[#162048] text-white border-b-8 border-[#1a1a1a]">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row justify-between items-center mb-12 border-b-4 border-white pb-4">
+            <h2 className="text-3xl md:text-4xl font-extrabold flex items-center">
+              <span className="w-10 h-1 bg-white inline-block mr-4 rounded"></span>
+              Trending Now
+            </h2>
+            <Link to="/trending" className="text-white hover:text-[#1a1a1a] font-bold text-lg md:text-xl flex items-center">
+              View All
+              <svg className="w-6 h-6 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+              </svg>
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {trendingPosts.map(post => (
+              <div key={post.id} className="bg-[#1a1a1a] rounded-xl overflow-hidden border-2 border-white hover:border-[#162048] transition-colors">
+                <div className="relative">
+                  <Link to={`/article/${post.id}`}>
+                    <img src={post.image} alt={post.title} className="w-full h-48 object-cover" />
+                  </Link>
+                  <span className="absolute top-4 left-4 bg-[#162048] text-white px-3 py-1 text-sm font-bold rounded shadow">
+                    {post.category}
+                  </span>
+                  <div className="absolute bottom-4 right-4 bg-[#162048] bg-opacity-80 text-white px-3 py-1 text-sm rounded flex items-center font-bold">
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                    {post.views}
+                  </div>
+                </div>
+                <div className="p-6">
+                  <Link to={`/article/${post.id}`}>
+                    <h3 className="font-bold text-lg hover:text-white transition-colors">{post.title}</h3>
+                  </Link>
+                  <div className="mt-4 flex items-center text-gray-300 font-bold">
+                    <span>{post.date}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Categories Section */}
+      <section className="py-16 border-b-8 border-[#1a1a1a] bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Discover Categories</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-extrabold mb-4 text-[#162048]">Discover Categories</h2>
+            <p className="text-[#162048] max-w-2xl mx-auto text-lg font-bold">
               Explore our diverse range of categories covering everything from technology and lifestyle to business and entertainment.
             </p>
           </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
             {categories.map((category, index) => (
-              <Link 
+              <Link
                 key={index}
-                to={`/category/${category.name.toLowerCase()}`} 
-                className="bg-white rounded-lg p-6 shadow-sm hover:shadow-md text-center transition-all hover:-translate-y-1 flex flex-col items-center"
+                to={`/category/${category.name.toLowerCase()}`}
+                className="bg-white border-2 border-[#162048] rounded-xl p-6 hover:bg-[#162048] hover:text-white text-center transition-all hover:-translate-y-2 flex flex-col items-center shadow"
               >
-                <div className={`w-16 h-16 ${category.color} rounded-full flex items-center justify-center mb-4`}>
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <div className="w-16 h-16 bg-[#162048] text-white rounded-md flex items-center justify-center mb-4">
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={category.icon}></path>
                   </svg>
                 </div>
-                <h3 className="font-bold text-lg mb-1">{category.name}</h3>
-                <p className="text-gray-500 text-sm">{category.count} Articles</p>
+                <h3 className="font-extrabold text-lg mb-2">{category.name}</h3>
+                <p className="text-[#162048] font-bold">{category.count} Articles</p>
               </Link>
             ))}
           </div>
@@ -348,42 +364,41 @@ const HomePage = () => {
       </section>
 
       {/* Featured Posts Section */}
-      <section className="py-16 bg-gray-100">
+      <section className="py-16 bg-white border-b-8 border-[#1a1a1a]">
         <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-10">
-            <h2 className="text-3xl font-bold flex items-center">
-              <span className="w-10 h-1 bg-red-600 inline-block mr-4"></span>
+          <div className="flex flex-col md:flex-row justify-between items-center mb-12 border-b-4 border-[#162048] pb-4">
+            <h2 className="text-3xl md:text-4xl font-extrabold flex items-center text-[#162048]">
+              <span className="w-10 h-1 bg-[#162048] inline-block mr-4 rounded"></span>
               Featured Posts
             </h2>
-            <Link to="/featured" className="text-red-600 hover:text-red-700 font-medium flex items-center">
-              View All 
-              <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+            <Link to="/featured" className="text-[#162048] hover:text-[#1a1a1a] font-bold text-lg md:text-xl flex items-center">
+              View All
+              <svg className="w-6 h-6 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
               </svg>
             </Link>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {featuredPosts.map(post => (
-              <div key={post.id} className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+              <div key={post.id} className="bg-white border-2 border-[#162048] rounded-xl overflow-hidden hover:shadow-lg transition-shadow">
                 <div className="relative">
                   <Link to={`/article/${post.id}`}>
                     <img src={post.image} alt={post.title} className="w-full h-56 object-cover" />
                   </Link>
-                  <span className="absolute top-4 left-4 bg-red-600 text-white px-3 py-1 text-xs font-semibold rounded-md">
+                  <span className="absolute top-4 left-4 bg-[#162048] text-white px-3 py-1 text-sm font-bold rounded shadow">
                     {post.category}
                   </span>
                 </div>
                 <div className="p-6">
                   <Link to={`/article/${post.id}`}>
-                    <h3 className="font-bold text-xl hover:text-red-600 transition-colors">{post.title}</h3>
+                    <h3 className="font-extrabold text-lg hover:text-[#162048] transition-colors text-[#1a1a1a]">{post.title}</h3>
                   </Link>
-                  <p className="text-gray-600 mt-3">{post.excerpt}</p>
-                  <div className="mt-4 flex items-center">
-                    <img src="https://placehold.co/100x100" alt={post.author} className="w-8 h-8 rounded-full" />
-                    <div className="ml-3">
-                      <span className="text-gray-800 font-medium text-sm">{post.author}</span>
-                      <div className="text-gray-500 text-xs">
+                  <p className="text-[#162048] mt-4 font-bold">{post.excerpt}</p>
+                  <div className="mt-6 flex items-center">
+                    <img src="https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" alt={post.author} className="w-10 h-10 rounded-full border-2 border-[#162048]" />
+                    <div className="ml-4">
+                      <span className="text-[#162048] font-bold">{post.author}</span>
+                      <div className="text-[#162048] font-bold">
                         {post.date}
                       </div>
                     </div>
@@ -395,171 +410,102 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Popular of the Week Section */}
-      <section className="py-16">
+      {/* Newsletter Signup */}
+      <section className="py-16 bg-[#162048] text-white border-b-8 border-[#1a1a1a]">
         <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-10">
-            <h2 className="text-3xl font-bold flex items-center">
-              <span className="w-10 h-1 bg-red-600 inline-block mr-4"></span>
-              Popular of the Week
-            </h2>
-            <Link to="/popular" className="text-red-600 hover:text-red-700 font-medium flex items-center">
-              View All 
-              <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
-              </svg>
-            </Link>
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {popularPosts.map((post, index) => (
-              <div key={post.id} className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                <div className="relative">
-                  <Link to={`/article/${post.id}`}>
-                    <img src={post.image} alt={post.title} className="w-full h-56 object-cover" />
-                  </Link>
-                  <div className="absolute top-4 left-4 flex items-center space-x-2">
-                    <span className="bg-red-600 text-white px-3 py-1 text-xs font-semibold rounded-md">
-                      {post.category}
-                    </span>
-                    <span className="bg-black bg-opacity-75 text-white px-3 py-1 text-xs font-bold rounded-md">
-                      #{index + 1}
-                    </span>
-                  </div>
-                  <div className="absolute bottom-4 right-4 bg-black bg-opacity-75 text-white px-2 py-1 text-xs rounded-md flex items-center">
-                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                    </svg>
-                    {post.views}
-                  </div>
-                </div>
-                <div className="p-6">
-                  <Link to={`/article/${post.id}`}>
-                    <h3 className="font-bold text-xl hover:text-red-600 transition-colors">{post.title}</h3>
-                  </Link>
-                  <div className="mt-4 flex items-center text-gray-500 text-sm">
-                    <span>{post.date}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Newsletter Signup Section */}
-      <section className="py-16 bg-gray-900 text-white">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-6">Subscribe to Our Newsletter</h2>
-            <p className="text-gray-300 mb-8 text-lg">
-              Get the latest news, updates, and insights delivered directly to your inbox. Stay informed with Echo.
-            </p>
-            <form className="max-w-2xl mx-auto flex flex-col md:flex-row gap-4">
-              <input 
-                type="email" 
-                placeholder="Your email address" 
-                className="flex-grow px-4 py-3 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-600"
+          <div className="max-w-3xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-extrabold mb-6 text-center">Get Weekly Newsletter</h2>
+            <form className="flex flex-col md:flex-row w-full mb-8">
+              <input
+                type="email"
+                placeholder="Your Email *"
+                className="flex-1 px-6 py-4 rounded-l-full rounded-r-none bg-white text-[#162048] text-lg outline-none border-none mb-4 md:mb-0"
                 required
               />
-              <button 
-                type="submit" 
-                className="bg-red-600 text-white px-6 py-3 rounded-md hover:bg-red-700 transition-colors whitespace-nowrap font-medium"
+              <button
+                type="submit"
+                className="bg-[#1a1a1a] text-white font-bold px-10 py-4 rounded-r-full rounded-l-none text-lg hover:bg-[#162048] transition-colors"
               >
-                Subscribe Now
+                Subscribe
               </button>
             </form>
-            <p className="text-gray-400 mt-4 text-sm">
-              By subscribing, you agree to our Privacy Policy and consent to receive updates from our team.
+            <p className="text-gray-300 text-center text-md">
+              By subscribing, you agree to our <Link to="/privacy-policy" className="text-white underline font-bold">Privacy Policy</Link> and consent to receive updates from our team.
             </p>
           </div>
         </div>
       </section>
 
       {/* Quick Access Section */}
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <section className="py-16 bg-[#ffffff] border-b-8 border-[#1a1a1a]">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
             {/* Quick Links */}
-            <div>
-              <h3 className="text-xl font-bold mb-6 flex items-center">
-                <span className="w-8 h-1 bg-red-600 inline-block mr-3"></span>
-                Quick Links
+            <div className="md:col-span-1">
+              <h3 className="text-2xl font-extrabold mb-8 flex items-center">
+                <span className="w-10 h-1 bg-[#162048] inline-block mr-4 rounded"></span>
+                <span className="text-[#1a1a1a]">Quick Links</span>
               </h3>
-              <ul className="space-y-3">
+              <ul className="space-y-6">
                 <li>
-                  <Link to="/" className="text-gray-700 hover:text-red-600 flex items-center">
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-                    </svg>
-                    Home
+                  <Link to="/" className="text-[#162048] hover:text-[#1a1a1a] flex items-center text-lg font-medium">
+                    <span className="mr-3 text-2xl font-bold">&gt;</span> Home
                   </Link>
                 </li>
                 <li>
-                  <Link to="/about" className="text-gray-700 hover:text-red-600 flex items-center">
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-                    </svg>
-                    About Us
+                  <Link to="/about" className="text-[#162048] hover:text-[#1a1a1a] flex items-center text-lg font-medium">
+                    <span className="mr-3 text-2xl font-bold">&gt;</span> About Us
                   </Link>
                 </li>
                 <li>
-                  <Link to="/contact" className="text-gray-700 hover:text-red-600 flex items-center">
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-                    </svg>
-                    Contact
+                  <Link to="/contact" className="text-[#162048] hover:text-[#1a1a1a] flex items-center text-lg font-medium">
+                    <span className="mr-3 text-2xl font-bold">&gt;</span> Contact
                   </Link>
                 </li>
                 <li>
-                  <Link to="/privacy-policy" className="text-gray-700 hover:text-red-600 flex items-center">
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-                    </svg>
-                    Privacy Policy
+                  <Link to="/privacy-policy" className="text-[#162048] hover:text-[#1a1a1a] flex items-center text-lg font-medium">
+                    <span className="mr-3 text-2xl font-bold">&gt;</span> Privacy Policy
                   </Link>
                 </li>
               </ul>
             </div>
-            
             {/* Categories */}
-            <div>
-              <h3 className="text-xl font-bold mb-6 flex items-center">
-                <span className="w-8 h-1 bg-red-600 inline-block mr-3"></span>
-                Categories
+            <div className="md:col-span-1">
+              <h3 className="text-2xl font-extrabold mb-8 flex items-center">
+                <span className="w-10 h-1 bg-[#162048] inline-block mr-4 rounded"></span>
+                <span className="text-[#1a1a1a]">Categories</span>
               </h3>
-              <ul className="space-y-3">
+              <ul className="space-y-6">
                 {categories.slice(0, 4).map((category, index) => (
                   <li key={index}>
-                    <Link to={`/category/${category.name.toLowerCase()}`} className="text-gray-700 hover:text-red-600 flex items-center">
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-                      </svg>
-                      {category.name}
+                    <Link to={`/category/${category.name.toLowerCase()}`} className="text-[#162048] hover:text-[#1a1a1a] flex items-center text-lg font-medium">
+                      <span className="mr-3 text-2xl font-bold">&gt;</span> {category.name}
                     </Link>
                   </li>
                 ))}
               </ul>
             </div>
-            
-            {/* Recent Posts */}
-            <div className="lg:col-span-2">
-              <h3 className="text-xl font-bold mb-6 flex items-center">
-                <span className="w-8 h-1 bg-red-600 inline-block mr-3"></span>
-                Recent Posts
+            {/* Recent Posts - wider column */}
+            <div className="md:col-span-2">
+              <h3 className="text-2xl font-extrabold mb-8 flex items-center">
+                <span className="w-10 h-1 bg-[#162048] inline-block mr-4 rounded"></span>
+                <span className="text-[#1a1a1a]">Recent Posts</span>
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                 {latestNews.slice(0, 4).map(post => (
-                  <div key={post.id} className="flex space-x-4">
+                  <div key={post.id} className="flex space-x-5 items-center mb-6">
                     <Link to={`/article/${post.id}`} className="flex-shrink-0">
-                      <img src={post.image} alt={post.title} className="w-20 h-20 object-cover rounded" />
+                      <img
+                        src={post.image}
+                        alt={post.title}
+                        className="w-32 h-24 object-cover rounded-md border-2 border-[#162048]"
+                      />
                     </Link>
-                    <div>
+                    <div className="min-w-0">
                       <Link to={`/article/${post.id}`}>
-                        <h4 className="font-semibold text-sm hover:text-red-600">{post.title}</h4>
+                        <h4 className="font-bold text-[#1a1a1a] text-lg hover:text-[#162048] leading-snug break-words">{post.title}</h4>
                       </Link>
-                      <span className="text-gray-500 text-xs">{post.date}</span>
+                      <span className="text-[#162048] text-sm">{post.date}</span>
                     </div>
                   </div>
                 ))}
