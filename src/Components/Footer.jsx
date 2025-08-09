@@ -39,7 +39,7 @@ const Footer = () => {
       title: 'LEGAL',
       links: [
         { name: 'Privacy Policy', url: '/privacy-policy' },
-        { name: 'Terms & Conditions', url: '/terms' },
+        { name: 'Terms & Conditions', url: '/terms-and-conditions' }, // <-- Updated route
         { name: 'Cookie Policy', url: '/cookies' },
         { name: 'Correction Policy', url: '/correction-policy' },
         { name: 'Editorial Standards', url: '/editorial-standards' },
