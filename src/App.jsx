@@ -6,14 +6,22 @@ import Header from './Components/Header';
 import Footer from './Components/Footer';
 import HomePage from './Pages/HomePage';
 import AboutPage from './Pages/AboutPage';
-import PrivacyPolicySection from './Components/PrivacyPolicySection'; // <-- Import PrivacyPolicySection
+import PrivacyPolicySection from './Components/PrivacyPolicySection';
 import Popup from './Components/Popup';
-import TermsAndConditions from './Pages/TermsAndConditions'; // Add this import
-import CookiePolicySection from './Components/Cookie_Policy'; // Add this import
-import EditorialStandardsSection from './Components/EditorialStandards'; // Add this import
-import CorrectionPolicySection from './Components/CorrectionPolicy'; // Add this import
-import CopyrightInformationSection from './Components/CopyrightInformation'; // Add this import
-import DisclaimerSection from './Components/Disclaimer'; // Add this import
+import TermsAndConditions from './Pages/TermsAndConditions';
+import CookiePolicySection from './Components/Cookie_Policy';
+import EditorialStandardsSection from './Components/EditorialStandards';
+import CorrectionPolicySection from './Components/CorrectionPolicy';
+import CopyrightInformationSection from './Components/CopyrightInformation';
+import DisclaimerSection from './Components/Disclaimer';
+import MissionVision from './Pages/MissionVision';
+import OurTeam from './Pages/OurTeam'; // <-- Import OurTeam page
+import EditorialGuidelines from './Pages/Editorial_Guidelines'; // Add this import
+import Careers from './Pages/Careers'; // Add this import
+import AwardsRecognition from './Pages/AwardsRecognition'; // Add this import
+import AdvertiseWithUs from './Pages/AdvertiseWithUs'; // Add this import
+import ContactUsForm from './Pages/ContactUsForm'; // Add this import
+import EditorialContact from './Pages/EditorialContact'; // Add this import
 
 // RouteChangeDetector for detecting route changes
 const RouteChangeDetector = ({ children }) => {
@@ -38,13 +46,21 @@ function App() {
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/about" element={<AboutPage />} />
+                <Route path="/our-team" element={<OurTeam />} />
+                <Route path="/careers" element={<Careers />} />
+                <Route path="/awards" element={<AwardsRecognition />} />
+                <Route path="/advertise" element={<AdvertiseWithUs />} />
+                <Route path="/contact" element={<ContactUsForm />} /> {/* Contact Us Form route */}
                 <Route path="/privacy-policy" element={<PrivacyPolicySection />} />
                 <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
                 <Route path="/cookies" element={<CookiePolicySection />} />
                 <Route path="/editorial-standards" element={<EditorialStandardsSection />} />
+                <Route path="/editorial-guidelines" element={<EditorialGuidelines />} /> {/* Editorial Guidelines route */}
+               <Route path="/editorial-contact" element={<EditorialContact />} /> {/* Editorial Contact route */}
                 <Route path="/correction-policy" element={<CorrectionPolicySection />} />
                 <Route path="/copyright" element={<CopyrightInformationSection />} />
-                                <Route path="/disclaimer" element={<DisclaimerSection />} /> {/* <-- Disclaimer route */}
+                <Route path="/disclaimer" element={<DisclaimerSection />} />
+                <Route path="/mission-vision" element={<MissionVision />} />
 
                 <Route path="*" element={<div className="flex justify-center items-center h-screen">Page not found</div>} />
               </Routes>
@@ -59,3 +75,4 @@ function App() {
 }
 
 export default App;
+// filepath: c:\Users\DELL\OneDrive\Desktop\Magazine_Website\Magazine_Website\src\App.jsx
