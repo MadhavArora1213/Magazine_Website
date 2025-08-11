@@ -22,6 +22,17 @@ import AwardsRecognition from './Pages/AwardsRecognition'; // Add this import
 import AdvertiseWithUs from './Pages/AdvertiseWithUs'; // Add this import
 import ContactUsForm from './Pages/ContactUsForm'; // Add this import
 import EditorialContact from './Pages/EditorialContact'; // Add this import
+// New imports for additional pages
+import TechnicalSupport from './Pages/TechnicalSupport';
+import OfficeLocations from './Pages/OfficeLocations';
+import SocialMediaLinks from './Pages/SocialMediaLinks';
+import MediaKit from './Pages/MediaKit';
+import PressReleases from './Pages/PressReleases';
+import RSSFeeds from './Pages/RSSFeeds';
+import Archive from './Pages/Archive';
+import SiteSearch from './Pages/SiteSearch';
+import NewsletterArchive from './Pages/NewsletterArchive';
+import AdvertisingEnquiries from './Pages/AdvertisingEnquiries';
 
 // RouteChangeDetector for detecting route changes
 const RouteChangeDetector = ({ children }) => {
@@ -61,6 +72,18 @@ function App() {
                 <Route path="/copyright" element={<CopyrightInformationSection />} />
                 <Route path="/disclaimer" element={<DisclaimerSection />} />
                 <Route path="/mission-vision" element={<MissionVision />} />
+
+                {/* New routes for additional pages */}
+                <Route path="/support" element={<TechnicalSupport />} />
+                <Route path="/locations" element={<OfficeLocations />} />
+                <Route path="/social-media" element={<SocialMediaLinks />} />
+                <Route path="/media-kit" element={<MediaKit />} />
+                <Route path="/press" element={<PressReleases />} />
+                <Route path="/rss" element={<RSSFeeds />} />
+                <Route path="/archive" element={<Archive />} />
+                <Route path="/search" element={<SiteSearch />} />
+                <Route path="/newsletter-archive" element={<NewsletterArchive />} />
+                <Route path="/advertising" element={<AdvertisingEnquiries />} />
 
                 <Route path="*" element={<div className="flex justify-center items-center h-screen">Page not found</div>} />
               </Routes>
