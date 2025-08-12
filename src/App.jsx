@@ -33,6 +33,8 @@ import Archive from './Pages/Archive';
 import SiteSearch from './Pages/SiteSearch';
 import NewsletterArchive from './Pages/NewsletterArchive';
 import AdvertisingEnquiries from './Pages/AdvertisingEnquiries';
+import EventsPage from './Pages/EventsPage';
+import Flipbook from './Pages/Flipbook';
 
 // RouteChangeDetector for detecting route changes
 const RouteChangeDetector = ({ children }) => {
@@ -84,7 +86,9 @@ function App() {
                 <Route path="/search" element={<SiteSearch />} />
                 <Route path="/newsletter-archive" element={<NewsletterArchive />} />
                 <Route path="/advertising" element={<AdvertisingEnquiries />} />
-
+                <Route path="/events" element={<EventsPage />} />
+                <Route path="/flipbook" element={<Flipbook />} />
+                
                 <Route path="*" element={<div className="flex justify-center items-center h-screen">Page not found</div>} />
               </Routes>
             </main>

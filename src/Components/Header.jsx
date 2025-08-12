@@ -78,14 +78,16 @@ const NAV_ITEMS = [
     { label: 'Local Personalities', to: '/regional/personalities' },
   ]},
   { label: 'SPECIAL SECTIONS', to: '/special', dropdown: [
-    { label: 'Power Lists', to: '/special/power-lists' },
-    { label: 'Annual Awards', to: '/special/awards' },
-    { label: 'Top Doctors', to: '/special/doctors' },
-    { label: 'Women Leaders', to: '/special/women-leaders' },
-    { label: 'Most Influential', to: '/special/influential' },
-    { label: 'Rising Entrepreneurs', to: '/special/entrepreneurs' },
-    { label: 'Social Impact Leaders', to: '/special/social-impact' },
+  { label: 'Power Lists', to: '/special/power-lists' },
+  { label: 'Annual Awards', to: '/special/awards' },
+  { label: 'Top Doctors', to: '/special/doctors' },
+  { label: 'Women Leaders', to: '/special/women-leaders' },
+  { label: 'Most Influential', to: '/special/influential' },
+  { label: 'Rising Entrepreneurs', to: '/special/entrepreneurs' },
+  { label: 'Social Impact Leaders', to: '/special/social-impact' },
   ]},
+  { label: 'EVENTS', to: '/events' },
+  { label: 'FLIPBOOK', to: '/flipbook' },
 ];
 
 const Header = () => {
