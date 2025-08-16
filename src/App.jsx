@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { TransitionProvider, useTransition } from './context/TransitionContext';
 import Loading from './Components/Loading';
 import Header from './Components/Header';
@@ -35,6 +35,13 @@ import NewsletterArchive from './Pages/NewsletterArchive';
 import AdvertisingEnquiries from './Pages/AdvertisingEnquiries';
 import EventsPage from './Pages/EventsPage';
 import Flipbook from './Pages/Flipbook';
+import Entertainment from './Pages/Category/Entertainment'; // <-- Add this import
+import PeopleProfile from './Pages/Category/People&Profile';
+import Lifestyle from './Pages/Category/Lifestyle'; // Add this import
+import BusinessLeadership from './Pages/Category/Business&Leadership';
+import CultureSociety from './Pages/Category/Culture&Society';
+import SpecialSection from './Pages/Category/SpecialSection';
+import RegionalFocus from './Pages/Category/RegionalFocus';
 
 // RouteChangeDetector for detecting route changes
 const RouteChangeDetector = ({ children }) => {
@@ -63,13 +70,13 @@ function App() {
                 <Route path="/careers" element={<Careers />} />
                 <Route path="/awards" element={<AwardsRecognition />} />
                 <Route path="/advertise" element={<AdvertiseWithUs />} />
-                <Route path="/contact" element={<ContactUsForm />} /> {/* Contact Us Form route */}
+                <Route path="/contact" element={<ContactUsForm />} />
                 <Route path="/privacy-policy" element={<PrivacyPolicySection />} />
                 <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
                 <Route path="/cookies" element={<CookiePolicySection />} />
                 <Route path="/editorial-standards" element={<EditorialStandardsSection />} />
-                <Route path="/editorial-guidelines" element={<EditorialGuidelines />} /> {/* Editorial Guidelines route */}
-               <Route path="/editorial-contact" element={<EditorialContact />} /> {/* Editorial Contact route */}
+                <Route path="/editorial-guidelines" element={<EditorialGuidelines />} />
+                <Route path="/editorial-contact" element={<EditorialContact />} />
                 <Route path="/correction-policy" element={<CorrectionPolicySection />} />
                 <Route path="/copyright" element={<CopyrightInformationSection />} />
                 <Route path="/disclaimer" element={<DisclaimerSection />} />
@@ -89,6 +96,15 @@ function App() {
                 <Route path="/events" element={<EventsPage />} />
                 <Route path="/flipbook" element={<Flipbook />} />
                 
+                {/* Category routes */}
+                <Route path="/entertainment" element={<Entertainment />} />
+                <Route path="/people" element={<PeopleProfile />} />
+                <Route path="/lifestyle" element={<Lifestyle />} />
+                <Route path="/business" element={<BusinessLeadership />} />
+                <Route path="/culture" element={<CultureSociety />} />
+                <Route path="/special" element={<SpecialSection />} />
+                <Route path="/regional" element={<RegionalFocus />} />
+
                 <Route path="*" element={<div className="flex justify-center items-center h-screen">Page not found</div>} />
               </Routes>
             </main>
