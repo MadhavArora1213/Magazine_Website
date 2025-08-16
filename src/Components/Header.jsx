@@ -167,20 +167,30 @@ const Header = () => {
             <ul className="flex flex-wrap items-center justify-center gap-6 text-lg font-bold tracking-wide" style={{ color: COLORS.black }}>
               {NAV_ITEMS.map((item, idx) => (
                 <li key={item.label} className="relative group">
-                  <button
-                    className="transition flex items-center gap-1"
-                    style={{ background: 'none', border: 'none', color: COLORS.black }}
-                    onClick={() => handleDropdown(idx)}
-                    onMouseEnter={() => setActiveDropdown(idx)}
-                    onMouseLeave={() => setActiveDropdown(null)}
-                  >
-                    <span className="hover:bg-[#162048] hover:text-white transition-colors px-2 py-1 rounded">{item.label}</span>
+                  <div className="flex items-center gap-1">
+                    <Link
+                      to={item.to}
+                      className="hover:bg-[#cacaca] hover:text-white transition-colors px-2 py-1 rounded"
+                      style={{ color: COLORS.black }}
+                    >
+                      {item.label}
+                    </Link>
                     {item.dropdown && (
-                      <svg className="w-4 h-4 ml-1" fill="none" stroke={COLORS.blue} strokeWidth="2" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
-                      </svg>
+                      <button
+                        className="transition flex items-center"
+                        style={{ background: 'none', border: 'none', color: COLORS.black }}
+                        onClick={() => handleDropdown(idx)}
+                        onMouseEnter={() => setActiveDropdown(idx)}
+                        onMouseLeave={() => setActiveDropdown(null)}
+                        tabIndex={-1}
+                        aria-label={`Show ${item.label} dropdown`}
+                      >
+                        <svg className="w-4 h-4 ml-1" fill="none" stroke={COLORS.blue} strokeWidth="2" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                      </button>
                     )}
-                  </button>
+                  </div>
                   {/* Dropdown */}
                   {item.dropdown && activeDropdown === idx && (
                     <div
