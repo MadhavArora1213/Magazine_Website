@@ -42,6 +42,23 @@ import BusinessLeadership from './Pages/Category/Business&Leadership';
 import CultureSociety from './Pages/Category/Culture&Society';
 import SpecialSection from './Pages/Category/SpecialSection';
 import RegionalFocus from './Pages/Category/RegionalFocus';
+import CelebritySpotlight from './Pages/SubCategory/CelebritySpotlight';
+import InfluencerStories from './Pages/SubCategory/InfluencerStories'; // <-- Add this import
+import Changemakers from './Pages/SubCategory/Changemakers';
+import BusinessLeaders from './Pages/SubCategory/BusinessLeaders';
+import InternationalIcons from './Pages/SubCategory/InternationalIcons';
+import Entrepreneurs from './Pages/SubCategory/Entrepreneurs';
+import LocalPersonalities from './Pages/SubCategory/LocalPersonalities';
+import RisingStars from './Pages/SubCategory/RisingStars';
+import BollywoodNews from './Pages/SubCategory/Entertainment/BollywoodNews';
+import CelebrityInterviews from './Pages/SubCategory/Entertainment/CelebrityInterviews';
+import HollywoodUpdates from './Pages/SubCategory/Entertainment/HollywoodUpdates';
+import MovieReviews from './Pages/SubCategory/Entertainment/MovieReviews';
+import MusicArtists from './Pages/SubCategory/Entertainment/Music&Artists';
+import RedCarpetEvents from './Pages/SubCategory/Entertainment/RedCarpetEvents';
+import TvShowsSeries from './Pages/SubCategory/Entertainment/TvShows&Series';
+import AwardShows from './Pages/SubCategory/Entertainment/AwardShows';
+import BehindTheScenes from './Pages/SubCategory/Entertainment/BehindTheScenes';
 
 // RouteChangeDetector for detecting route changes
 const RouteChangeDetector = ({ children }) => {
@@ -104,6 +121,25 @@ function App() {
                 <Route path="/culture" element={<CultureSociety />} />
                 <Route path="/special" element={<SpecialSection />} />
                 <Route path="/regional" element={<RegionalFocus />} />
+                <Route path="/people/celebrity-spotlight" element={<CelebritySpotlight />} />
+                <Route path="/people/influencer-stories" element={<InfluencerStories />} /> {/* <-- Add this route */}
+                <Route path="/people/changemakers" element={<Changemakers />} />
+                <Route path="/people/leaders" element={<BusinessLeaders />} />
+                <Route path="/people/international-icons" element={<InternationalIcons />} />
+                <Route path="/people/entrepreneurs" element={<Entrepreneurs />} />
+                <Route path="/people/local-personalities" element={<LocalPersonalities />} />
+                <Route path="/people/rising-stars" element={<RisingStars />} />
+
+                {/* Entertainment subcategory routes */}
+                <Route path="/entertainment/bollywood-news" element={<BollywoodNews />} />
+                <Route path="/entertainment/celebrity-interviews" element={<CelebrityInterviews />} />
+                <Route path="/entertainment/hollywood-updates" element={<HollywoodUpdates />} />
+                <Route path="/entertainment/movie-reviews" element={<MovieReviews />} />
+                <Route path="/entertainment/music-artists" element={<MusicArtists />} />
+                <Route path="/entertainment/red-carpet-events" element={<RedCarpetEvents />} />
+                <Route path="/entertainment/tv-shows-series" element={<TvShowsSeries />} />
+                <Route path="/entertainment/award-shows" element={<AwardShows />} />
+                <Route path="/entertainment/behind-the-scenes" element={<BehindTheScenes />} />
 
                 <Route path="*" element={<div className="flex justify-center items-center h-screen">Page not found</div>} />
               </Routes>
