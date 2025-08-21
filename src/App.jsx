@@ -4,10 +4,10 @@ import { TransitionProvider, useTransition } from './context/TransitionContext';
 import Loading from './Components/Loading';
 import Header from './Components/Header';
 import Footer from './Components/Footer';
+import Popup from './Components/Popup';
 import HomePage from './Pages/HomePage';
 import AboutPage from './Pages/AboutPage';
 import PrivacyPolicySection from './Components/PrivacyPolicySection';
-import Popup from './Components/Popup';
 import TermsAndConditions from './Pages/TermsAndConditions';
 import CookiePolicySection from './Components/Cookie_Policy';
 import EditorialStandardsSection from './Components/EditorialStandards';
@@ -59,6 +59,7 @@ import RedCarpetEvents from './Pages/SubCategory/Entertainment/RedCarpetEvents';
 import TvShowsSeries from './Pages/SubCategory/Entertainment/TvShows&Series';
 import AwardShows from './Pages/SubCategory/Entertainment/AwardShows';
 import BehindTheScenes from './Pages/SubCategory/Entertainment/BehindTheScenes';
+import AdminIndex from './Admin/AdminIndex';
 
 // RouteChangeDetector for detecting route changes
 const RouteChangeDetector = ({ children }) => {
@@ -72,82 +73,97 @@ const RouteChangeDetector = ({ children }) => {
   );
 };
 
+const MainSiteLayout = ({ children }) => (
+  <>
+    <Header />
+    <main className="flex-grow pt-20">{children}</main>
+    <Footer />
+    <Popup />
+  </>
+);
+
 function App() {
   return (
     <TransitionProvider>
       <Router>
-        <RouteChangeDetector>
-          <div className="flex flex-col min-h-screen">
-            <Header />
-            <main className="flex-grow pt-20">
-              <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/about" element={<AboutPage />} />
-                <Route path="/our-team" element={<OurTeam />} />
-                <Route path="/careers" element={<Careers />} />
-                <Route path="/awards" element={<AwardsRecognition />} />
-                <Route path="/advertise" element={<AdvertiseWithUs />} />
-                <Route path="/contact" element={<ContactUsForm />} />
-                <Route path="/privacy-policy" element={<PrivacyPolicySection />} />
-                <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
-                <Route path="/cookies" element={<CookiePolicySection />} />
-                <Route path="/editorial-standards" element={<EditorialStandardsSection />} />
-                <Route path="/editorial-guidelines" element={<EditorialGuidelines />} />
-                <Route path="/editorial-contact" element={<EditorialContact />} />
-                <Route path="/correction-policy" element={<CorrectionPolicySection />} />
-                <Route path="/copyright" element={<CopyrightInformationSection />} />
-                <Route path="/disclaimer" element={<DisclaimerSection />} />
-                <Route path="/mission-vision" element={<MissionVision />} />
+        <Routes>
+          {/* Admin panel: no header/footer */}
+          <Route path="/admin/*" element={<AdminIndex />} />
 
-                {/* New routes for additional pages */}
-                <Route path="/support" element={<TechnicalSupport />} />
-                <Route path="/locations" element={<OfficeLocations />} />
-                <Route path="/social-media" element={<SocialMediaLinks />} />
-                <Route path="/media-kit" element={<MediaKit />} />
-                <Route path="/press" element={<PressReleases />} />
-                <Route path="/rss" element={<RSSFeeds />} />
-                <Route path="/archive" element={<Archive />} />
-                <Route path="/search" element={<SiteSearch />} />
-                <Route path="/newsletter-archive" element={<NewsletterArchive />} />
-                <Route path="/advertising" element={<AdvertisingEnquiries />} />
-                <Route path="/events" element={<EventsPage />} />
-                <Route path="/flipbook" element={<Flipbook />} />
-                
-                {/* Category routes */}
-                <Route path="/entertainment" element={<Entertainment />} />
-                <Route path="/people" element={<PeopleProfile />} />
-                <Route path="/lifestyle" element={<Lifestyle />} />
-                <Route path="/business" element={<BusinessLeadership />} />
-                <Route path="/culture" element={<CultureSociety />} />
-                <Route path="/special" element={<SpecialSection />} />
-                <Route path="/regional" element={<RegionalFocus />} />
-                <Route path="/people/celebrity-spotlight" element={<CelebritySpotlight />} />
-                <Route path="/people/influencer-stories" element={<InfluencerStories />} /> {/* <-- Add this route */}
-                <Route path="/people/changemakers" element={<Changemakers />} />
-                <Route path="/people/leaders" element={<BusinessLeaders />} />
-                <Route path="/people/international-icons" element={<InternationalIcons />} />
-                <Route path="/people/entrepreneurs" element={<Entrepreneurs />} />
-                <Route path="/people/local-personalities" element={<LocalPersonalities />} />
-                <Route path="/people/rising-stars" element={<RisingStars />} />
+          {/* Main site: header/footer shown */}
+          <Route
+            path="*"
+            element={
+              <RouteChangeDetector>
+                <MainSiteLayout>
+                  <Routes>
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/about" element={<AboutPage />} />
+                    <Route path="/our-team" element={<OurTeam />} />
+                    <Route path="/careers" element={<Careers />} />
+                    <Route path="/awards" element={<AwardsRecognition />} />
+                    <Route path="/advertise" element={<AdvertiseWithUs />} />
+                    <Route path="/contact" element={<ContactUsForm />} />
+                    <Route path="/privacy-policy" element={<PrivacyPolicySection />} />
+                    <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+                    <Route path="/cookies" element={<CookiePolicySection />} />
+                    <Route path="/editorial-standards" element={<EditorialStandardsSection />} />
+                    <Route path="/editorial-guidelines" element={<EditorialGuidelines />} />
+                    <Route path="/editorial-contact" element={<EditorialContact />} />
+                    <Route path="/correction-policy" element={<CorrectionPolicySection />} />
+                    <Route path="/copyright" element={<CopyrightInformationSection />} />
+                    <Route path="/disclaimer" element={<DisclaimerSection />} />
+                    <Route path="/mission-vision" element={<MissionVision />} />
 
-                {/* Entertainment subcategory routes */}
-                <Route path="/entertainment/bollywood-news" element={<BollywoodNews />} />
-                <Route path="/entertainment/celebrity-interviews" element={<CelebrityInterviews />} />
-                <Route path="/entertainment/hollywood-updates" element={<HollywoodUpdates />} />
-                <Route path="/entertainment/movie-reviews" element={<MovieReviews />} />
-                <Route path="/entertainment/music-artists" element={<MusicArtists />} />
-                <Route path="/entertainment/red-carpet-events" element={<RedCarpetEvents />} />
-                <Route path="/entertainment/tv-shows-series" element={<TvShowsSeries />} />
-                <Route path="/entertainment/award-shows" element={<AwardShows />} />
-                <Route path="/entertainment/behind-the-scenes" element={<BehindTheScenes />} />
+                    {/* New routes for additional pages */}
+                    <Route path="/support" element={<TechnicalSupport />} />
+                    <Route path="/locations" element={<OfficeLocations />} />
+                    <Route path="/social-media" element={<SocialMediaLinks />} />
+                    <Route path="/media-kit" element={<MediaKit />} />
+                    <Route path="/press" element={<PressReleases />} />
+                    <Route path="/rss" element={<RSSFeeds />} />
+                    <Route path="/archive" element={<Archive />} />
+                    <Route path="/search" element={<SiteSearch />} />
+                    <Route path="/newsletter-archive" element={<NewsletterArchive />} />
+                    <Route path="/advertising" element={<AdvertisingEnquiries />} />
+                    <Route path="/events" element={<EventsPage />} />
+                    <Route path="/flipbook" element={<Flipbook />} />
+                    
+                    {/* Category routes */}
+                    <Route path="/entertainment" element={<Entertainment />} />
+                    <Route path="/people" element={<PeopleProfile />} />
+                    <Route path="/lifestyle" element={<Lifestyle />} />
+                    <Route path="/business" element={<BusinessLeadership />} />
+                    <Route path="/culture" element={<CultureSociety />} />
+                    <Route path="/special" element={<SpecialSection />} />
+                    <Route path="/regional" element={<RegionalFocus />} />
+                    <Route path="/people/celebrity-spotlight" element={<CelebritySpotlight />} />
+                    <Route path="/people/influencer-stories" element={<InfluencerStories />} /> {/* <-- Add this route */}
+                    <Route path="/people/changemakers" element={<Changemakers />} />
+                    <Route path="/people/leaders" element={<BusinessLeaders />} />
+                    <Route path="/people/international-icons" element={<InternationalIcons />} />
+                    <Route path="/people/entrepreneurs" element={<Entrepreneurs />} />
+                    <Route path="/people/local-personalities" element={<LocalPersonalities />} />
+                    <Route path="/people/rising-stars" element={<RisingStars />} />
 
-                <Route path="*" element={<div className="flex justify-center items-center h-screen">Page not found</div>} />
-              </Routes>
-            </main>
-            <Footer />
-            <Popup />
-          </div>
-        </RouteChangeDetector>
+                    {/* Entertainment subcategory routes */}
+                    <Route path="/entertainment/bollywood-news" element={<BollywoodNews />} />
+                    <Route path="/entertainment/celebrity-interviews" element={<CelebrityInterviews />} />
+                    <Route path="/entertainment/hollywood-updates" element={<HollywoodUpdates />} />
+                    <Route path="/entertainment/movie-reviews" element={<MovieReviews />} />
+                    <Route path="/entertainment/music-artists" element={<MusicArtists />} />
+                    <Route path="/entertainment/red-carpet-events" element={<RedCarpetEvents />} />
+                    <Route path="/entertainment/tv-shows-series" element={<TvShowsSeries />} />
+                    <Route path="/entertainment/award-shows" element={<AwardShows />} />
+                    <Route path="/entertainment/behind-the-scenes" element={<BehindTheScenes />} />
+
+                    <Route path="*" element={<div className="flex justify-center items-center h-screen">Page not found</div>} />
+                  </Routes>
+                </MainSiteLayout>
+              </RouteChangeDetector>
+            }
+          />
+        </Routes>
       </Router>
     </TransitionProvider>
   );
