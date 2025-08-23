@@ -3,9 +3,9 @@ import { useTheme } from "../context/ThemeContext";
 
 // Mock categories
 const mockCategories = [
-  { name: "Bollywood", slug: "bollywood" },
-  { name: "Technology", slug: "technology" },
-  { name: "Fashion", slug: "fashion" },
+  { name: "Bollywood", slug: "bollywood", design: "design1" },
+  { name: "Technology", slug: "technology", design: "design2" },
+  { name: "Fashion", slug: "fashion", design: "design3" },
 ];
 
 const DeleteCategory = () => {
@@ -26,6 +26,8 @@ const DeleteCategory = () => {
     ? "bg-black text-white border-white/20"
     : "bg-white text-black border-black/20";
   const listText = isDark ? "text-gray-200" : "text-gray-700";
+  const innerCardBg = isDark ? "bg-gray-800/50" : "bg-gray-50";
+  const innerBorderColor = isDark ? "border-white/10" : "border-gray-200";
 
   const handleDelete = (e) => {
     e.preventDefault();
@@ -35,9 +37,18 @@ const DeleteCategory = () => {
     alert("🗑️ Category deleted!");
   };
 
+  const getDesignInfo = (design) => {
+    const designMap = {
+      design1: { name: "Design 1", icon: "⊞", color: "bg-blue-500" },
+      design2: { name: "Design 2", icon: "☰", color: "bg-green-500" },
+      design3: { name: "Design 3", icon: "▤", color: "bg-purple-500" }
+    };
+    return designMap[design] || { name: "Unknown", icon: "?", color: "bg-gray-500" };
+  };
+
   return (
-    <div className={`min-h-screen ${isDark ? "bg-black" : "bg-white"} py-12 px-2 flex items-center justify-center`}>
-      <div className={`w-full max-w-xl ${cardBg} rounded-2xl p-8 md:p-12`}>
+    <div className={`min-h-screen ${isDark ? "bg-black" : "bg-white"} py-12 px-2 flex items-center justify-center transition-colors duration-300`}>
+      <div className={`w-full max-w-4xl ${cardBg} rounded-2xl p-8 md:p-12`}>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
           <div>
             <h2 className={`text-3xl md:text-4xl font-extrabold mb-2 ${textMain}`}>
@@ -56,38 +67,76 @@ const DeleteCategory = () => {
             </span>
           </div>
         </div>
-        <form onSubmit={handleDelete} className={`${isDark ? "bg-black" : "bg-white"} rounded-xl p-6 space-y-6 border border-transparent`}>
-          <div>
-            <label className={`block font-semibold mb-2 ${textMain}`}>Select Category to Delete</label>
-            <select
-              className={`w-full rounded px-3 py-2 border focus:outline-none transition ${selectTheme}`}
-              value={selected}
-              onChange={(e) => setSelected(e.target.value)}
-              required
-            >
-              <option value="">-- Choose Category --</option>
-              {categories.map((cat) => (
-                <option key={cat.slug} value={cat.slug}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Delete Form */}
+          <div className={`${innerCardBg} rounded-xl p-6 space-y-6 border ${innerBorderColor}`}>
+            <h3 className={`text-lg font-semibold ${textMain}`}>Delete Category</h3>
+            <form onSubmit={handleDelete} className="space-y-6">
+              <div>
+                <label className={`block font-semibold mb-2 ${textMain}`}>Select Category to Delete</label>
+                <select
+                  className={`w-full rounded px-3 py-2 border focus:outline-none transition ${selectTheme}`}
+                  value={selected}
+                  onChange={(e) => setSelected(e.target.value)}
+                  required
+                >
+                  <option value="">-- Choose Category --</option>
+                  {categories.map((cat) => (
+                    <option key={cat.slug} value={cat.slug}>
+                      {cat.name} ({getDesignInfo(cat.design).name})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button
+                type="submit"
+                className={`w-full py-3 rounded-lg font-bold transition ${btnDanger}`}
+                disabled={!selected}
+              >
+                Delete Category
+              </button>
+            </form>
           </div>
-          <button
-            type="submit"
-            className={`w-full py-3 rounded-lg font-bold transition ${btnDanger}`}
-            disabled={!selected}
-          >
-            Delete Category
-          </button>
-        </form>
+
+          {/* Design Preview */}
+          <div className={`${innerCardBg} rounded-xl p-6 border ${innerBorderColor}`}>
+            <h3 className={`text-lg font-semibold mb-4 ${textMain}`}>Design Information</h3>
+            <div className="space-y-4">
+              {categories.map((cat) => {
+                const designInfo = getDesignInfo(cat.design);
+                return (
+                  <div key={cat.slug} className={`p-4 rounded-lg border ${innerBorderColor}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={`font-medium ${textMain}`}>{cat.name}</span>
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium text-white ${designInfo.color}`}>
+                        {designInfo.icon} {designInfo.name}
+                      </span>
+                    </div>
+                    <p className={`text-sm ${subText}`}>
+                      This category uses {designInfo.name} layout
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
         <div className="mt-8">
-          <h3 className={`text-lg font-semibold mb-2 ${isDark ? "text-white" : "text-black"}`}>Current Categories:</h3>
+          <h3 className={`text-lg font-semibold mb-2 ${textMain}`}>Current Categories:</h3>
           <ul className={`list-disc list-inside ${listText}`}>
             {categories.length === 0 ? (
               <li className="text-gray-400">No categories left.</li>
             ) : (
-              categories.map((cat) => <li key={cat.slug}>{cat.name}</li>)
+              categories.map((cat) => {
+                const designInfo = getDesignInfo(cat.design);
+                return (
+                  <li key={cat.slug}>
+                    {cat.name} - {designInfo.name}
+                  </li>
+                );
+              })
             )}
           </ul>
         </div>

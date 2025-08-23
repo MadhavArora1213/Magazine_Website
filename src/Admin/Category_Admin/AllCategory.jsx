@@ -1,29 +1,8 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-
-const mockCategories = [
-    {
-        name: "Bollywood",
-        slug: "bollywood",
-        design: "design1",
-        status: "active",
-        description: "All about Bollywood movies and stars.",
-    },
-    {
-        name: "Technology",
-        slug: "technology",
-        design: "design2",
-        status: "inactive",
-        description: "Latest in tech and gadgets.",
-    },
-    {
-        name: "Fashion",
-        slug: "fashion",
-        design: "design3",
-        status: "active",
-        description: "Trends and style tips.",
-    },
-];
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useTheme } from "../context/ThemeContext";
+import { useAdminAuth } from "../context/AdminAuthContext";
+import categoryService from "../services/categoryService";
 
 const designBadges = {
     design1: (
@@ -100,28 +79,141 @@ const statusBadge = (status) =>
                 viewBox="0 0 24 24"
             >
                 <circle cx="12" cy="12" r="10" />
-                <path d="M15 9l-6 6M9 9l6 6" />
+                <path d="15 9l-6 6M9 9l6 6" />
             </svg>
             Inactive
         </span>
     );
 
 const AllCategory = () => {
-    const [categories] = useState(mockCategories);
+    const [categories, setCategories] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [updatingDesign, setUpdatingDesign] = useState(null);
+    const { theme } = useTheme();
+    const { admin } = useAdminAuth();
+    const navigate = useNavigate();
+    const isDark = theme === "dark";
+
+    const bgMain = isDark ? "bg-black" : "bg-white";
+    const textMain = isDark ? "text-white" : "text-black";
+    const subText = isDark ? "text-gray-300" : "text-gray-600";
+    const cardBg = isDark ? "bg-gray-800/50" : "bg-gray-50";
+    const borderColor = isDark ? "border-white/10" : "border-gray-200";
+
+    // Fetch categories on component mount
+    useEffect(() => {
+        fetchCategories();
+    }, []);
+
+    const fetchCategories = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await categoryService.getAllCategories();
+            setCategories(response.data || []);
+        } catch (err) {
+            setError(err.message);
+            console.error('Error fetching categories:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDelete = async (categoryId) => {
+        if (!window.confirm('Are you sure you want to delete this category?')) {
+            return;
+        }
+
+        try {
+            await categoryService.deleteCategory(categoryId);
+            setCategories(categories.filter(cat => cat.id !== categoryId));
+            alert('Category deleted successfully!');
+        } catch (err) {
+            alert(`Error deleting category: ${err.message}`);
+        }
+    };
+
+    const handleToggleStatus = async (categoryId) => {
+        try {
+            const response = await categoryService.toggleCategoryStatus(categoryId);
+            setCategories(categories.map(cat => 
+                cat.id === categoryId 
+                    ? { ...cat, status: response.data.status }
+                    : cat
+            ));
+        } catch (err) {
+            alert(`Error updating status: ${err.message}`);
+        }
+    };
+
+    const handleDesignChange = async (categoryId, newDesign) => {
+        try {
+            setUpdatingDesign(categoryId);
+            await categoryService.updateCategoryDesign(categoryId, newDesign);
+            
+            // Update local state
+            setCategories(categories.map(cat => 
+                cat.id === categoryId 
+                    ? { ...cat, design: newDesign }
+                    : cat
+            ));
+            
+            alert(`Category design updated to ${newDesign}!`);
+        } catch (err) {
+            alert(`Error updating design: ${err.message}`);
+        } finally {
+            setUpdatingDesign(null);
+        }
+    };
+
+    const handleEdit = (category) => {
+        navigate(`/admin/category/update/${category.id}`, { 
+            state: { category } 
+        });
+    };
+
+    if (loading) {
+        return (
+            <div className={`min-h-screen ${bgMain} flex items-center justify-center`}>
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-current mx-auto mb-4"></div>
+                    <p className={`text-xl ${textMain}`}>Loading categories...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className={`min-h-screen ${bgMain} flex items-center justify-center`}>
+                <div className="text-center">
+                    <div className="text-red-500 text-6xl mb-4">⚠️</div>
+                    <h2 className={`text-2xl font-bold mb-2 ${textMain}`}>Error Loading Categories</h2>
+                    <p className={`mb-4 ${subText}`}>{error}</p>
+                    <button 
+                        onClick={fetchCategories}
+                        className={`px-4 py-2 rounded-lg ${isDark ? "bg-white text-black" : "bg-black text-white"}`}
+                    >
+                        Try Again
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className="min-h-screen bg-white dark:bg-black py-6 px-2 md:px-6 transition-colors duration-300">
+        <div className={`min-h-screen ${bgMain} py-6 px-2 md:px-6 transition-colors duration-300`}>
             <div className="w-full">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
                     <div>
-                        <h2 className="text-2xl md:text-4xl font-black text-black dark:text-white mb-1 tracking-tight flex items-center gap-2">
+                        <h2 className={`text-2xl md:text-4xl font-black mb-1 tracking-tight flex items-center gap-2 ${textMain}`}>
                             <svg
                                 width="32"
                                 height="32"
                                 fill="none"
-                                stroke="black"
-                                className="dark:stroke-white"
+                                stroke="currentColor"
                                 strokeWidth="2.5"
                                 viewBox="0 0 24 24"
                             >
@@ -130,21 +222,21 @@ const AllCategory = () => {
                             </svg>
                             All Categories
                         </h2>
-                        <p className="text-gray-600 dark:text-gray-300 text-base">
+                        <p className={`text-base ${subText}`}>
                             Overview of all magazine categories with their design and status.
                         </p>
                     </div>
                     <div className="flex gap-2">
                         <Link
                             to="/admin/category/create"
-                            className="bg-black hover:bg-gray-900 text-white font-bold px-5 py-2 rounded-lg shadow transition flex items-center gap-2"
+                            className={`${isDark ? "bg-white hover:bg-gray-200 text-black" : "bg-black hover:bg-gray-900 text-white"} font-bold px-5 py-2 rounded-lg shadow transition flex items-center gap-2`}
                         >
                             <svg
                                 width="18"
                                 height="18"
                                 fill="none"
-                                stroke="white"
-                                strokeWidth="2.5"
+                                stroke="currentColor"
+                                strokeWidth="2"
                                 viewBox="0 0 24 24"
                             >
                                 <circle cx="12" cy="12" r="9" />
@@ -154,27 +246,62 @@ const AllCategory = () => {
                         </Link>
                     </div>
                 </div>
+
+                {/* Design Preview Section */}
+                <div className={`mb-8 p-6 ${cardBg} rounded-2xl border ${borderColor}`}>
+                    <h3 className={`text-lg font-semibold mb-4 ${textMain}`}>Available Designs</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className={`text-center p-4 ${isDark ? "bg-gray-900" : "bg-white"} rounded-xl border ${borderColor}`}>
+                            <div className={`w-16 h-16 mx-auto mb-3 ${isDark ? "bg-white" : "bg-black"} rounded-lg flex items-center justify-center`}>
+                                <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" className={isDark ? "text-black" : "text-white"}>
+                                    <rect x="4" y="4" width="16" height="16" rx="4" />
+                                </svg>
+                            </div>
+                            <h4 className={`font-semibold mb-1 ${textMain}`}>Design 1</h4>
+                            <p className={`text-xs ${subText}`}>Card Grid Layout</p>
+                        </div>
+                        <div className={`text-center p-4 ${isDark ? "bg-gray-900" : "bg-white"} rounded-xl border ${borderColor}`}>
+                            <div className={`w-16 h-16 mx-auto mb-3 ${isDark ? "bg-gray-700" : "bg-gray-100"} rounded-lg flex items-center justify-center border ${isDark ? "border-gray-600" : "border-gray-300"}`}>
+                                <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" className={isDark ? "text-gray-300" : "text-gray-700"}>
+                                    <circle cx="12" cy="12" r="8" />
+                                </svg>
+                            </div>
+                            <h4 className={`font-semibold mb-1 ${textMain}`}>Design 2</h4>
+                            <p className={`text-xs ${subText}`}>Table Layout</p>
+                        </div>
+                        <div className={`text-center p-4 ${isDark ? "bg-gray-900" : "bg-white"} rounded-xl border ${borderColor}`}>
+                            <div className={`w-16 h-16 mx-auto mb-3 ${isDark ? "bg-white" : "bg-black"} rounded-lg flex items-center justify-center`}>
+                                <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" className={isDark ? "text-black" : "text-white"}>
+                                    <polygon points="12,4 20,20 4,20" />
+                                </svg>
+                            </div>
+                            <h4 className={`font-semibold mb-1 ${textMain}`}>Design 3</h4>
+                            <p className={`text-xs ${subText}`}>Glassmorphism</p>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Table */}
-                <div className="overflow-x-auto rounded-2xl shadow-2xl bg-white dark:bg-black border border-black/10 dark:border-white/10 w-full">
-                    <table className="min-w-full w-full divide-y divide-black/10 dark:divide-white/10">
+                <div className={`overflow-x-auto rounded-2xl shadow-2xl ${isDark ? "bg-gray-900" : "bg-white"} border ${borderColor} w-full`}>
+                    <table className="min-w-full w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead>
-                            <tr className="bg-gray-100 dark:bg-gray-900">
-                                <th className="py-4 px-4 text-left font-semibold text-black dark:text-white">
+                            <tr className={isDark ? "bg-gray-800" : "bg-gray-100"}>
+                                <th className={`py-4 px-4 text-left font-semibold ${textMain}`}>
                                     Name
                                 </th>
-                                <th className="py-4 px-4 text-left font-semibold text-black dark:text-white">
+                                <th className={`py-4 px-4 text-left font-semibold ${textMain}`}>
                                     Slug
                                 </th>
-                                <th className="py-4 px-4 text-left font-semibold text-black dark:text-white">
+                                <th className={`py-4 px-4 text-left font-semibold ${textMain}`}>
                                     Design
                                 </th>
-                                <th className="py-4 px-4 text-left font-semibold text-black dark:text-white">
+                                <th className={`py-4 px-4 text-left font-semibold ${textMain}`}>
                                     Status
                                 </th>
-                                <th className="py-4 px-4 text-left font-semibold text-black dark:text-white">
+                                <th className={`py-4 px-4 text-left font-semibold ${textMain}`}>
                                     Description
                                 </th>
-                                <th className="py-4 px-4 text-center font-semibold text-black dark:text-white">
+                                <th className={`py-4 px-4 text-center font-semibold ${textMain}`}>
                                     Actions
                                 </th>
                             </tr>
@@ -182,39 +309,60 @@ const AllCategory = () => {
                         <tbody>
                             {categories.map((cat, idx) => (
                                 <tr
-                                    key={cat.slug}
+                                    key={cat.id}
                                     className={
                                         idx % 2 === 0
-                                            ? "bg-white dark:bg-black hover:bg-gray-100 dark:hover:bg-gray-900 transition"
-                                            : "bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-900 transition"
+                                            ? `${isDark ? "bg-gray-900" : "bg-white"} hover:${isDark ? "bg-gray-800" : "bg-gray-100"} transition`
+                                            : `${isDark ? "bg-gray-800" : "bg-gray-50"} hover:${isDark ? "bg-gray-800" : "bg-gray-100"} transition`
                                     }
                                 >
-                                    <td className="py-3 px-4 font-medium text-black dark:text-white">
+                                    <td className={`py-3 px-4 font-medium ${textMain}`}>
                                         {cat.name}
                                     </td>
-                                    <td className="py-3 px-4 text-gray-700 dark:text-gray-300">
+                                    <td className={`py-3 px-4 ${subText}`}>
                                         {cat.slug}
                                     </td>
                                     <td className="py-3 px-4">
-                                        {designBadges[cat.design]}
+                                        <div className="flex items-center gap-2">
+                                            {designBadges[cat.design]}
+                                            <select
+                                                value={cat.design}
+                                                onChange={(e) => handleDesignChange(cat.id, e.target.value)}
+                                                disabled={updatingDesign === cat.id}
+                                                className={`text-xs px-2 py-1 rounded border ${isDark ? "bg-gray-800 text-white border-gray-600" : "bg-white text-black border-gray-300"}`}
+                                            >
+                                                <option value="design1">Design 1</option>
+                                                <option value="design2">Design 2</option>
+                                                <option value="design3">Design 3</option>
+                                            </select>
+                                            {updatingDesign === cat.id && (
+                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                                            )}
+                                        </div>
                                     </td>
                                     <td className="py-3 px-4">
-                                        {statusBadge(cat.status)}
+                                        <button
+                                            onClick={() => handleToggleStatus(cat.id)}
+                                            className="hover:opacity-80 transition"
+                                        >
+                                            {statusBadge(cat.status)}
+                                        </button>
                                     </td>
-                                    <td className="py-3 px-4 text-gray-700 dark:text-gray-300">
-                                        {cat.description}
+                                    <td className={`py-3 px-4 ${subText}`}>
+                                        {cat.description || 'No description'}
                                     </td>
                                     <td className="py-3 px-4 text-center">
                                         <div className="flex flex-row gap-2 justify-center items-center">
                                             <button
-                                                className="inline-flex items-center gap-1 bg-black hover:bg-gray-800 text-white px-3 py-1 rounded transition shadow"
+                                                onClick={() => handleEdit(cat)}
+                                                className={`inline-flex items-center gap-1 ${isDark ? "bg-white hover:bg-gray-200 text-black" : "bg-black hover:bg-gray-800 text-white"} px-3 py-1 rounded transition shadow`}
                                                 title="Edit"
                                             >
                                                 <svg
                                                     width="16"
                                                     height="16"
                                                     fill="none"
-                                                    stroke="white"
+                                                    stroke="currentColor"
                                                     strokeWidth="2"
                                                     viewBox="0 0 24 24"
                                                 >
@@ -223,14 +371,15 @@ const AllCategory = () => {
                                                 Edit
                                             </button>
                                             <button
-                                                className="inline-flex items-center gap-1 bg-white border border-black text-black hover:bg-gray-200 px-3 py-1 rounded transition shadow"
+                                                onClick={() => handleDelete(cat.id)}
+                                                className={`inline-flex items-center gap-1 ${isDark ? "bg-gray-700 hover:bg-gray-600 text-white" : "bg-white hover:bg-gray-100 text-black"} border ${isDark ? "border-gray-600" : "border-gray-300"} px-3 py-1 rounded transition shadow`}
                                                 title="Delete"
                                             >
                                                 <svg
                                                     width="16"
                                                     height="16"
                                                     fill="none"
-                                                    stroke="black"
+                                                    stroke="currentColor"
                                                     strokeWidth="2"
                                                     viewBox="0 0 24 24"
                                                 >
@@ -257,7 +406,7 @@ const AllCategory = () => {
                         </tbody>
                     </table>
                 </div>
-                <div className="mt-8 text-sm text-gray-500 dark:text-gray-400 text-center">
+                <div className={`mt-8 text-sm text-center ${subText}`}>
                     Showing {categories.length} categories
                 </div>
             </div>

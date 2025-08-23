@@ -1,49 +1,38 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
-// Minimal GenZ-inspired black/white themes
-const themes = {
-  light: {
-    name: "Light",
-    body: "bg-white text-black",
-    header: "bg-white text-black border-b border-black/10",
-    sidebar: "bg-white text-black border-r border-black/10",
-    main: "bg-white",
-    accent: "bg-black text-white",
-    accentHover: "bg-black/80 text-white",
-    shadow: "shadow-[0_2px_16px_0_rgba(0,0,0,0.06)]",
-  },
-  dark: {
-    name: "Dark",
-    body: "bg-black text-white",
-    header: "bg-black text-white border-b border-white/10",
-    sidebar: "bg-black text-white border-r border-white/10",
-    main: "bg-black",
-    accent: "bg-white text-black",
-    accentHover: "bg-white/80 text-black",
-    shadow: "shadow-[0_2px_16px_0_rgba(255,255,255,0.06)]",
-  },
-};
-
 const ThemeContext = createContext();
 
+export const useTheme = () => {
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error("useTheme must be used within a ThemeProvider");
+  }
+  return context;
+};
+
 export const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState(() =>
-    localStorage.getItem("admin-theme") || "light"
-  );
+  const [theme, setTheme] = useState("dark");
 
   useEffect(() => {
-    localStorage.setItem("admin-theme", theme);
-    document.body.className = themes[theme].body;
-  }, [theme]);
+    // Get theme from localStorage or default to dark
+    const savedTheme = localStorage.getItem("adminTheme") || "dark";
+    setTheme(savedTheme);
+  }, []);
 
-  const switchTheme = () =>
-    setTheme((prev) => (prev === "light" ? "dark" : "light"));
+  const toggleTheme = () => {
+    const newTheme = theme === "dark" ? "light" : "dark";
+    setTheme(newTheme);
+    localStorage.setItem("adminTheme", newTheme);
+  };
+
+  const value = {
+    theme,
+    toggleTheme,
+  };
 
   return (
-    <ThemeContext.Provider value={{ theme, switchTheme, themeStyles: themes[theme] }}>
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   );
 };
-
-export const useTheme = () => useContext(ThemeContext);

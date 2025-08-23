@@ -1,178 +1,289 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useTheme } from "../context/ThemeContext";
 
-// Helper to generate slug from name
 const slugify = (text) =>
   text
     .toString()
     .toLowerCase()
     .trim()
-    .replace(/\s+/g, "-")
-    .replace(/[^\w\-]+/g, "")
-    .replace(/\-\-+/g, "-");
+    .replace(/\s+/g, "-") // Replace spaces with -
+    .replace(/[^\w\-]+/g, "") // Remove all non-word chars
+    .replace(/\-\-+/g, "-") // Replace multiple - with single -
+    .replace(/^-+/, "") // Trim - from start of text
+    .replace(/-+$/, ""); // Trim - from end of text
 
-const designOptions = [
-  {
-    key: "design1",
-    label: "Design 1",
-    preview: (
-      <div className="border-2 border-blue-500 rounded-lg p-4 text-center bg-blue-50 dark:bg-blue-900">
-        <h4 className="font-bold text-blue-700 dark:text-blue-200 mb-2">Design 1</h4>
-        <div className="h-12 bg-blue-200 dark:bg-blue-700 rounded mb-2"></div>
-        <p className="text-xs text-blue-700 dark:text-blue-200">Simple & Clean</p>
-      </div>
-    ),
-  },
-  {
-    key: "design2",
-    label: "Design 2",
-    preview: (
-      <div className="border-2 border-green-500 rounded-lg p-4 text-center bg-green-50 dark:bg-green-900">
-        <h4 className="font-bold text-green-700 dark:text-green-200 mb-2">Design 2</h4>
-        <div className="h-12 bg-green-200 dark:bg-green-700 rounded mb-2"></div>
-        <p className="text-xs text-green-700 dark:text-green-200">Modern Card</p>
-      </div>
-    ),
-  },
-  {
-    key: "design3",
-    label: "Design 3",
-    preview: (
-      <div className="border-2 border-yellow-500 rounded-lg p-4 text-center bg-yellow-50 dark:bg-yellow-900">
-        <h4 className="font-bold text-yellow-700 dark:text-yellow-200 mb-2">Design 3</h4>
-        <div className="h-12 bg-yellow-200 dark:bg-yellow-700 rounded mb-2"></div>
-        <p className="text-xs text-yellow-700 dark:text-yellow-200">Bold & Highlighted</p>
-      </div>
-    ),
-  },
-];
-
-const CategoryForm = ({ initialData = {}, onSubmit, isEdit = false, inputClass = "" }) => {
+const CategoryForm = ({ 
+  initialData = {}, 
+  onSubmit, 
+  isEdit = false, 
+  inputClass = "",
+  loading = false,
+  selectedDesign = "design1"
+}) => {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
-  const [name, setName] = useState(initialData.name || "");
-  const [slug, setSlug] = useState(initialData.slug || "");
-  const [design, setDesign] = useState(initialData.design || "design1");
-  const [status, setStatus] = useState(initialData.status || "active");
-  const [description, setDescription] = useState(initialData.description || "");
+  const [formData, setFormData] = useState({
+    name: initialData.name || "",
+    description: initialData.description || "",
+    featureImage: initialData.featureImage || "",
+    parentId: initialData.parentId || "",
+    order: initialData.order || 0,
+  });
 
-  // Auto-generate slug from name
+  const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (initialData.name) {
+      setFormData(prev => ({
+        ...prev,
+        name: initialData.name,
+        description: initialData.description || "",
+        featureImage: initialData.featureImage || "",
+        parentId: initialData.parentId || "",
+        order: initialData.order || 0,
+      }));
+    }
+  }, [initialData]);
+
   const handleNameChange = (e) => {
-    const value = e.target.value;
-    setName(value);
-    setSlug(slugify(value));
+    const name = e.target.value;
+    setFormData(prev => ({ ...prev, name }));
+    
+    // Auto-generate slug
+    if (name) {
+      const slug = slugify(name);
+      // You can add slug to formData if needed
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = "Category name is required";
+    } else if (formData.name.trim().length < 2) {
+      newErrors.name = "Category name must be at least 2 characters";
+    }
+
+    if (formData.description && formData.description.length > 500) {
+      newErrors.description = "Description must be less than 500 characters";
+    }
+
+    if (formData.order < 0) {
+      newErrors.order = "Order must be a non-negative number";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!name || !slug) return;
-    onSubmit &&
-      onSubmit({
-        name,
-        slug,
-        design,
-        status,
-        description,
-      });
+    
+    if (validateForm()) {
+      onSubmit(formData);
+    }
   };
 
-  // Theme-aware classes for form background and text
-  const formBg = isDark
-    ? "bg-black border border-white/10"
-    : "bg-white border border-black/10";
-  const labelText = isDark ? "text-white" : "text-black";
-  const inputBase =
-    "w-full rounded px-3 py-2 border focus:outline-none transition";
-  const inputTheme = isDark
-    ? "bg-black text-white border-white/20 placeholder-gray-400 focus:ring-2 focus:ring-blue-900"
-    : "bg-white text-black border-gray-300 placeholder-gray-500 focus:ring-2 focus:ring-blue-400";
-  const selectTheme = isDark
-    ? "bg-black text-white border-white/20"
-    : "bg-white text-black border-gray-300";
-  const buttonTheme = isDark
-    ? "bg-blue-800 hover:bg-blue-900 text-white"
-    : "bg-blue-700 hover:bg-blue-800 text-white";
+  const textMain = isDark ? "text-white" : "text-black";
+  const subText = isDark ? "text-gray-300" : "text-gray-600";
+  const errorText = "text-red-500";
+  const labelClass = `block text-sm font-medium mb-2 ${textMain}`;
+  const inputBaseClass = `w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition ${inputClass}`;
+  const errorClass = `border-red-500 focus:ring-red-500`;
 
   return (
-    <form
-      className={`${formBg} rounded-xl p-6 max-w-xl mx-auto space-y-6`}
-      onSubmit={handleSubmit}
-    >
-      <div>
-        <label className={`block font-semibold mb-1 ${labelText}`}>Category Name</label>
-        <input
-          type="text"
-          className={`${inputBase} ${inputTheme} ${inputClass}`}
-          value={name}
-          onChange={handleNameChange}
-          placeholder="Enter category name"
-          required
-        />
-      </div>
-      <div>
-        <label className={`block font-semibold mb-1 ${labelText}`}>Slug</label>
-        <input
-          type="text"
-          className={`${inputBase} ${isDark ? "bg-gray-800 text-white border-white/20" : "bg-gray-100 text-black border-gray-300"} cursor-not-allowed`}
-          value={slug}
-          readOnly
-        />
-      </div>
-      <div>
-        <label className={`block font-semibold mb-2 ${labelText}`}>Choose Design</label>
-        <div className="flex flex-col sm:flex-row gap-4">
-          {designOptions.map((option) => (
-            <label key={option.key} className="flex-1 cursor-pointer">
-              <input
-                type="radio"
-                name="design"
-                value={option.key}
-                checked={design === option.key}
-                onChange={() => setDesign(option.key)}
-                className="hidden"
-              />
-              <div
-                className={`transition border-2 rounded-lg p-2 ${
-                  design === option.key
-                    ? "border-blue-600 ring-2 ring-blue-200 dark:ring-blue-900"
-                    : "border-transparent"
-                }`}
-              >
-                {option.preview}
-              </div>
-            </label>
-          ))}
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Selected Design Display */}
+      <div className={`p-4 rounded-lg ${isDark ? "bg-gray-800/50" : "bg-gray-50"} border ${isDark ? "border-white/10" : "border-gray-200"}`}>
+        <label className={labelClass}>Selected Design</label>
+        <div className="flex items-center gap-3">
+          <div className={`w-12 h-12 rounded-lg ${isDark ? "bg-white" : "bg-black"} flex items-center justify-center`}>
+            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" className={isDark ? "text-black" : "text-white"}>
+              {selectedDesign === "design1" && <rect x="4" y="4" width="16" height="16" rx="4" />}
+              {selectedDesign === "design2" && <circle cx="12" cy="12" r="8" />}
+              {selectedDesign === "design3" && <polygon points="12,4 20,20 4,20" />}
+            </svg>
+          </div>
+          <span className={`font-semibold ${textMain}`}>
+            {selectedDesign === "design1" && "Design 1 - Card Grid Layout"}
+            {selectedDesign === "design2" && "Design 2 - Table Layout"}
+            {selectedDesign === "design3" && "Design 3 - Glassmorphism"}
+          </span>
         </div>
       </div>
+
+      {/* Category Name */}
       <div>
-        <label className={`block font-semibold mb-1 ${labelText}`}>Description</label>
-        <textarea
-          className={`${inputBase} ${inputTheme} ${inputClass}`}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Short description (optional)"
-          rows={3}
+        <label htmlFor="name" className={labelClass}>
+          Category Name *
+        </label>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          value={formData.name}
+          onChange={handleNameChange}
+          className={`${inputBaseClass} ${errors.name ? errorClass : ""}`}
+          placeholder="Enter category name"
+          disabled={loading}
         />
+        {errors.name && (
+          <p className={`mt-1 text-sm ${errorText}`}>{errors.name}</p>
+        )}
       </div>
+
+      {/* Description */}
       <div>
-        <label className={`block font-semibold mb-1 ${labelText}`}>Status</label>
-        <select
-          className={`${inputBase} ${selectTheme} ${inputClass}`}
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-        >
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-        </select>
+        <label htmlFor="description" className={labelClass}>
+          Description
+        </label>
+        <textarea
+          id="description"
+          name="description"
+          value={formData.description}
+          onChange={handleInputChange}
+          rows="3"
+          className={`${inputBaseClass} ${errors.description ? errorClass : ""}`}
+          placeholder="Enter category description (optional)"
+          disabled={loading}
+        />
+        {errors.description && (
+          <p className={`mt-1 text-sm ${errorText}`}>{errors.description}</p>
+        )}
+        <p className={`mt-1 text-xs ${subText}`}>
+          {formData.description.length}/500 characters
+        </p>
       </div>
-      <button
-        type="submit"
-        className={`w-full ${buttonTheme} font-bold py-3 rounded-lg transition`}
-      >
-        {isEdit ? "Update Category" : "Create Category"}
-      </button>
+
+      {/* Feature Image */}
+      <div>
+        <label htmlFor="featureImage" className={labelClass}>
+          Feature Image URL
+        </label>
+        <input
+          type="url"
+          id="featureImage"
+          name="featureImage"
+          value={formData.featureImage}
+          onChange={handleInputChange}
+          className={`${inputBaseClass} ${errors.featureImage ? errorClass : ""}`}
+          placeholder="https://example.com/image.jpg"
+          disabled={loading}
+        />
+        {errors.featureImage && (
+          <p className={`mt-1 text-sm ${errorText}`}>{errors.featureImage}</p>
+        )}
+        <p className={`mt-1 text-xs ${subText}`}>
+          Optional: URL for category hero image
+        </p>
+      </div>
+
+      {/* Parent Category */}
+      <div>
+        <label htmlFor="parentId" className={labelClass}>
+          Parent Category
+        </label>
+        <input
+          type="text"
+          id="parentId"
+          name="parentId"
+          value={formData.parentId}
+          onChange={handleInputChange}
+          className={inputBaseClass}
+          placeholder="Leave empty for main category"
+          disabled={loading}
+        />
+        <p className={`mt-1 text-xs ${subText}`}>
+          Optional: UUID of parent category for subcategories
+        </p>
+      </div>
+
+      {/* Display Order */}
+      <div>
+        <label htmlFor="order" className={labelClass}>
+          Display Order
+        </label>
+        <input
+          type="number"
+          id="order"
+          name="order"
+          value={formData.order}
+          onChange={handleInputChange}
+          min="0"
+          className={`${inputBaseClass} ${errors.order ? errorClass : ""}`}
+          placeholder="0"
+          disabled={loading}
+        />
+        {errors.order && (
+          <p className={`mt-1 text-sm ${errorText}`}>{errors.order}</p>
+        )}
+        <p className={`mt-1 text-xs ${subText}`}>
+          Lower numbers appear first
+        </p>
+      </div>
+
+      {/* Submit Button */}
+      <div className="pt-4">
+        <button
+          type="submit"
+          disabled={loading}
+          className={`w-full py-3 px-6 rounded-lg font-bold text-lg transition-all duration-200 ${
+            loading
+              ? "opacity-50 cursor-not-allowed"
+              : "hover:scale-105 active:scale-95"
+          } ${
+            isDark
+              ? "bg-white text-black hover:bg-gray-200"
+              : "bg-black text-white hover:bg-gray-900"
+          }`}
+        >
+          {loading ? (
+            <div className="flex items-center justify-center gap-2">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current"></div>
+              {isEdit ? "Updating..." : "Creating..."}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center gap-2">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                {isEdit ? (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                  />
+                ) : (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 4v16m8-8H4"
+                  />
+                )}
+              </svg>
+              {isEdit ? "Update Category" : "Create Category"}
+            </div>
+          )}
+        </button>
+      </div>
     </form>
   );
 };
+
 export default CategoryForm;
