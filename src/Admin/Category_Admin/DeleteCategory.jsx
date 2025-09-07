@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useTheme } from "../context/ThemeContext";
+import { useToast } from "../../context/ToastContext";
 
 // Mock categories
 const mockCategories = [
@@ -13,6 +14,7 @@ const DeleteCategory = () => {
   const [selected, setSelected] = useState("");
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const { showSuccess } = useToast();
 
   const cardBg = isDark
     ? "bg-black border border-white/10"
@@ -34,7 +36,7 @@ const DeleteCategory = () => {
     if (!selected) return;
     setCategories(categories.filter((cat) => cat.slug !== selected));
     setSelected("");
-    alert("🗑️ Category deleted!");
+    showSuccess("Category deleted successfully!");
   };
 
   const getDesignInfo = (design) => {

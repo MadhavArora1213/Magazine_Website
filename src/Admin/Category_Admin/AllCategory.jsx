@@ -90,6 +90,16 @@ const AllCategory = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [updatingDesign, setUpdatingDesign] = useState(null);
+    const [pagination, setPagination] = useState({
+        currentPage: 1,
+        totalPages: 1,
+        totalCount: 0,
+        hasNextPage: false,
+        hasPrevPage: false,
+        nextPage: null,
+        prevPage: null
+    });
+    const [pageSize] = useState(10);
     const { theme } = useTheme();
     const { admin } = useAdminAuth();
     const navigate = useNavigate();
@@ -103,18 +113,78 @@ const AllCategory = () => {
 
     // Fetch categories on component mount
     useEffect(() => {
-        fetchCategories();
+        fetchCategories(1);
     }, []);
 
-    const fetchCategories = async () => {
+    const fetchCategories = async (page = 1) => {
         try {
             setLoading(true);
             setError(null);
-            const response = await categoryService.getAllCategories();
-            setCategories(response.data || []);
+            console.log('Fetching categories for page:', page);
+
+            const response = await categoryService.getCategories({ page, limit: pageSize });
+            console.log('API Response:', response);
+
+            // Ensure categories is always an array
+            let categoriesArray = [];
+            if (response && typeof response === 'object') {
+                console.log('Response structure:', Object.keys(response));
+
+                // Check if response.success and response.data exists (backend API structure)
+                if (response.success && response.data && Array.isArray(response.data)) {
+                    categoriesArray = response.data;
+                    console.log('Found categories in response.data:', categoriesArray.length);
+                } else if (response.data && response.data.data && Array.isArray(response.data.data)) {
+                    categoriesArray = response.data.data;
+                    console.log('Found categories in response.data.data:', categoriesArray.length);
+                } else if (response.data && Array.isArray(response.data)) {
+                    categoriesArray = response.data;
+                    console.log('Response.data is array:', categoriesArray.length);
+                } else if (Array.isArray(response)) {
+                    categoriesArray = response;
+                    console.log('Response is array:', categoriesArray.length);
+                } else if (response.categories && Array.isArray(response.categories)) {
+                    categoriesArray = response.categories;
+                    console.log('Response.categories is array:', categoriesArray.length);
+                } else if (response.data && response.data.categories && Array.isArray(response.data.categories)) {
+                    categoriesArray = response.data.categories;
+                    console.log('Response.data.categories is array:', categoriesArray.length);
+                } else {
+                    console.log('Could not find categories array in response');
+                    console.log('Full response:', JSON.stringify(response, null, 2));
+                }
+            } else {
+                console.log('Response is not an object:', typeof response);
+            }
+
+            console.log('Setting categories:', categoriesArray.length);
+            setCategories(categoriesArray);
+
+            // Update pagination state
+            if (response && response.pagination) {
+                setPagination(response.pagination);
+            } else if (response && response.success) {
+                // Fallback: construct pagination from direct response properties
+                setPagination({
+                    currentPage: response.currentPage || 1,
+                    totalPages: response.totalPages || 1,
+                    totalCount: response.totalCount || 0,
+                    hasNextPage: (response.currentPage || 1) < (response.totalPages || 1),
+                    hasPrevPage: (response.currentPage || 1) > 1,
+                    nextPage: (response.currentPage || 1) < (response.totalPages || 1) ? (response.currentPage || 1) + 1 : null,
+                    prevPage: (response.currentPage || 1) > 1 ? (response.currentPage || 1) - 1 : null
+                });
+            }
+
+            // Update pagination state
+            if (response && response.pagination) {
+                setPagination(response.pagination);
+            }
         } catch (err) {
-            setError(err.message);
             console.error('Error fetching categories:', err);
+            console.error('Error details:', err.response?.data || err.message);
+            setError(err.message || 'Failed to fetch categories');
+            setCategories([]); // Set empty array on error
         } finally {
             setLoading(false);
         }
@@ -127,6 +197,7 @@ const AllCategory = () => {
 
         try {
             await categoryService.deleteCategory(categoryId);
+            // Note: cmsService.deleteCategory expects the ID as a parameter, which should work
             setCategories(categories.filter(cat => cat.id !== categoryId));
             alert('Category deleted successfully!');
         } catch (err) {
@@ -137,11 +208,14 @@ const AllCategory = () => {
     const handleToggleStatus = async (categoryId) => {
         try {
             const response = await categoryService.toggleCategoryStatus(categoryId);
-            setCategories(categories.map(cat => 
-                cat.id === categoryId 
-                    ? { ...cat, status: response.data.status }
-                    : cat
-            ));
+            const newStatus = response?.data?.status || response?.status;
+            if (newStatus) {
+                setCategories(categories.map(cat =>
+                    cat.id === categoryId
+                        ? { ...cat, status: newStatus }
+                        : cat
+                ));
+            }
         } catch (err) {
             alert(`Error updating status: ${err.message}`);
         }
@@ -150,15 +224,15 @@ const AllCategory = () => {
     const handleDesignChange = async (categoryId, newDesign) => {
         try {
             setUpdatingDesign(categoryId);
-            await categoryService.updateCategoryDesign(categoryId, newDesign);
-            
+            const response = await categoryService.updateCategoryDesign(categoryId, newDesign);
+
             // Update local state
-            setCategories(categories.map(cat => 
-                cat.id === categoryId 
+            setCategories(categories.map(cat =>
+                cat.id === categoryId
                     ? { ...cat, design: newDesign }
                     : cat
             ));
-            
+
             alert(`Category design updated to ${newDesign}!`);
         } catch (err) {
             alert(`Error updating design: ${err.message}`);
@@ -168,9 +242,36 @@ const AllCategory = () => {
     };
 
     const handleEdit = (category) => {
-        navigate(`/admin/category/update/${category.id}`, { 
-            state: { category } 
+        navigate(`/admin/category/update/${category.id}`, {
+            state: { category }
         });
+    };
+
+    // Pagination functions
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= pagination.totalPages) {
+            fetchCategories(newPage);
+        }
+    };
+
+    const handlePrevPage = () => {
+        if (pagination.hasPrevPage) {
+            handlePageChange(pagination.currentPage - 1);
+        }
+    };
+
+    const handleNextPage = () => {
+        if (pagination.hasNextPage) {
+            handlePageChange(pagination.currentPage + 1);
+        }
+    };
+
+    const handleFirstPage = () => {
+        handlePageChange(1);
+    };
+
+    const handleLastPage = () => {
+        handlePageChange(pagination.totalPages);
     };
 
     if (loading) {
@@ -191,8 +292,8 @@ const AllCategory = () => {
                     <div className="text-red-500 text-6xl mb-4">⚠️</div>
                     <h2 className={`text-2xl font-bold mb-2 ${textMain}`}>Error Loading Categories</h2>
                     <p className={`mb-4 ${subText}`}>{error}</p>
-                    <button 
-                        onClick={fetchCategories}
+                    <button
+                        onClick={() => fetchCategories(1)}
                         className={`px-4 py-2 rounded-lg ${isDark ? "bg-white text-black" : "bg-black text-white"}`}
                     >
                         Try Again
@@ -406,9 +507,91 @@ const AllCategory = () => {
                         </tbody>
                     </table>
                 </div>
-                <div className={`mt-8 text-sm text-center ${subText}`}>
-                    Showing {categories.length} categories
-                </div>
+
+                {/* Pagination */}
+                {pagination.totalPages > 1 && (
+                    <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div className={`text-sm ${subText}`}>
+                            Showing {((pagination.currentPage - 1) * pageSize) + 1} to {Math.min(pagination.currentPage * pageSize, pagination.totalCount)} of {pagination.totalCount} categories
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            {/* First Page */}
+                            <button
+                                onClick={handleFirstPage}
+                                disabled={!pagination.hasPrevPage}
+                                className={`px-3 py-2 text-sm font-medium rounded-lg transition ${
+                                    pagination.hasPrevPage
+                                        ? `${isDark ? "bg-gray-700 hover:bg-gray-600 text-white" : "bg-gray-200 hover:bg-gray-300 text-black"}`
+                                        : `${isDark ? "bg-gray-800 text-gray-500" : "bg-gray-100 text-gray-400"} cursor-not-allowed`
+                                }`}
+                            >
+                                First
+                            </button>
+
+                            {/* Previous Page */}
+                            <button
+                                onClick={handlePrevPage}
+                                disabled={!pagination.hasPrevPage}
+                                className={`px-3 py-2 text-sm font-medium rounded-lg transition ${
+                                    pagination.hasPrevPage
+                                        ? `${isDark ? "bg-gray-700 hover:bg-gray-600 text-white" : "bg-gray-200 hover:bg-gray-300 text-black"}`
+                                        : `${isDark ? "bg-gray-800 text-gray-500" : "bg-gray-100 text-gray-400"} cursor-not-allowed`
+                                }`}
+                            >
+                                Previous
+                            </button>
+
+                            {/* Page Numbers */}
+                            <div className="flex items-center gap-1">
+                                {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                                    const pageNum = Math.max(1, Math.min(pagination.totalPages - 4, pagination.currentPage - 2)) + i;
+                                    if (pageNum > pagination.totalPages) return null;
+
+                                    return (
+                                        <button
+                                            key={pageNum}
+                                            onClick={() => handlePageChange(pageNum)}
+                                            className={`px-3 py-2 text-sm font-medium rounded-lg transition ${
+                                                pageNum === pagination.currentPage
+                                                    ? `${isDark ? "bg-blue-600 text-white" : "bg-blue-500 text-white"}`
+                                                    : `${isDark ? "bg-gray-700 hover:bg-gray-600 text-white" : "bg-gray-200 hover:bg-gray-300 text-black"}`
+                                            }`}
+                                        >
+                                            {pageNum}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Next Page */}
+                            <button
+                                onClick={handleNextPage}
+                                disabled={!pagination.hasNextPage}
+                                className={`px-3 py-2 text-sm font-medium rounded-lg transition ${
+                                    pagination.hasNextPage
+                                        ? `${isDark ? "bg-gray-700 hover:bg-gray-600 text-white" : "bg-gray-200 hover:bg-gray-300 text-black"}`
+                                        : `${isDark ? "bg-gray-800 text-gray-500" : "bg-gray-100 text-gray-400"} cursor-not-allowed`
+                                }`}
+                            >
+                                Next
+                            </button>
+
+                            {/* Last Page */}
+                            <button
+                                onClick={handleLastPage}
+                                disabled={!pagination.hasNextPage}
+                                className={`px-3 py-2 text-sm font-medium rounded-lg transition ${
+                                    pagination.hasNextPage
+                                        ? `${isDark ? "bg-gray-700 hover:bg-gray-600 text-white" : "bg-gray-200 hover:bg-gray-300 text-black"}`
+                                        : `${isDark ? "bg-gray-800 text-gray-500" : "bg-gray-100 text-gray-400"} cursor-not-allowed`
+                                }`}
+                            >
+                                Last
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

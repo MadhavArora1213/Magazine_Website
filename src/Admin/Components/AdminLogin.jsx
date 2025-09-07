@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { useTheme } from '../context/ThemeContext';
 
@@ -7,7 +8,8 @@ const AdminLogin = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  
+
+  const navigate = useNavigate();
   const { login, error } = useAdminAuth();
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -30,8 +32,8 @@ const AdminLogin = () => {
     setIsLoading(false);
 
     if (result.success) {
-      // Redirect will be handled by the auth context
-      console.log('Login successful');
+      // Redirect to admin dashboard after successful login
+      navigate('/admin');
     }
   };
 
@@ -153,19 +155,43 @@ const AdminLogin = () => {
           {/* Demo Credentials */}
           <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
             <h4 className={`text-sm font-medium ${isDark ? "text-blue-200" : "text-blue-800"} mb-2`}>
-              Demo Credentials
+              Admin Credentials (1 Account Per Role)
             </h4>
             <div className="space-y-1 text-xs">
               <p className={isDark ? "text-blue-300" : "text-blue-700"}>
-                <strong>Master Admin:</strong> admin@magazine.com / Admin@123
+                <strong>Master Admin:</strong> masteradmin1@magazine.com / MasterAdmin@123
               </p>
               <p className={isDark ? "text-blue-300" : "text-blue-700"}>
-                <strong>Content Admin:</strong> content@magazine.com / Content@123
+                <strong>Webmaster:</strong> webmaster1@magazine.com / Webmaster@123
               </p>
               <p className={isDark ? "text-blue-300" : "text-blue-700"}>
-                <strong>Editor-in-Chief:</strong> editor@magazine.com / Editor@123
+                <strong>Content Admin:</strong> contentadmin1@magazine.com / ContentAdmin@123
+              </p>
+              <p className={isDark ? "text-blue-300" : "text-blue-700"}>
+                <strong>Editor-in-Chief:</strong> editor-in-chief1@magazine.com / Editor-in-Chief@123
+              </p>
+              <p className={isDark ? "text-blue-300" : "text-blue-700"}>
+                <strong>Section Editors:</strong> sectioneditors1@magazine.com / SectionEditors@123
+              </p>
+              <p className={isDark ? "text-blue-300" : "text-blue-700"}>
+                <strong>Senior Writers:</strong> seniorwriters1@magazine.com / SeniorWriters@123
+              </p>
+              <p className={isDark ? "text-blue-300" : "text-blue-700"}>
+                <strong>Staff Writers:</strong> staffwriters1@magazine.com / StaffWriters@123
+              </p>
+              <p className={isDark ? "text-blue-300" : "text-blue-700"}>
+                <strong>Contributors:</strong> contributors1@magazine.com / Contributors@123
+              </p>
+              <p className={isDark ? "text-blue-300" : "text-blue-700"}>
+                <strong>Reviewers:</strong> reviewers1@magazine.com / Reviewers@123
+              </p>
+              <p className={isDark ? "text-blue-300" : "text-blue-700"}>
+                <strong>Social Media Manager:</strong> socialmediamanager1@magazine.com / SocialMediaManager@123
               </p>
             </div>
+            <p className={`text-xs mt-2 ${isDark ? "text-blue-400" : "text-blue-600"}`}>
+              ✅ Total: 10 admin accounts created (1 per role)
+            </p>
           </div>
 
           {/* Role System Info */}

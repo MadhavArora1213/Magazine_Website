@@ -1,378 +1,400 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import MobileMenu from './MobileMenu';
+import WeatherWidget from './WeatherWidget';
+import StockTicker from './StockTicker';
+import TrendingBar from './TrendingBar';
 
-// Only use these three colors
-const COLORS = {
-  white: '#ffffff',
-  blue: '#162048',
-  black: '#1a1a1a',
+const fetchNavigation = async () => {
+  try {
+    const base = import.meta?.env?.VITE_API_URL || 'http://localhost:5000';
+    const res = await fetch(`${base}/api/public/homepage`);
+    const json = await res.json();
+    return json.navigation || [];
+  } catch (e) {
+    console.error('Failed to fetch navigation', e);
+    return [];
+  }
 };
 
-const NAV_ITEMS = [
-  { label: 'HOME', to: '/', dropdown: [
-    { label: 'Hero Slider', to: '/' },
-    { label: 'Trending Tags', to: '/' },
-    { label: 'Quick Access', to: '/' },
-    { label: 'Suggested Reads', to: '/' },
-    { label: 'Newsletter', to: '/' },
-  ]},
-  { label: 'PEOPLE & PROFILES', to: '/people', dropdown: [
-    { label: 'Celebrity Spotlight', to: '/people/celebrity-spotlight' },
-    { label: 'Influencer Stories', to: '/people/influencer-stories' },
-    { label: 'Business Leaders', to: '/people/leaders' },
-    { label: 'Rising Stars', to: '/people/rising-stars' },
-    { label: 'Local Personalities', to: '/people/local-personalities' },
-    { label: 'International Icons', to: '/people/international-icons' },
-    { label: 'Changemakers', to: '/people/changemakers' },
-    { label: 'Entrepreneurs', to: '/people/entrepreneurs' },
-  ]},
-  { label: 'ENTERTAINMENT', to: '/entertainment', dropdown: [
-    { label: 'Bollywood News', to: '/entertainment/bollywood-news' },
-    { label: 'Hollywood Updates', to: '/entertainment/hollywood-updates' },
-    { label: 'TV Shows & Series', to: '/entertainment/tv-shows-series' },
-    { label: 'Music & Artists', to: '/entertainment/music-artists' },
-    { label: 'Movie Reviews', to: '/entertainment/movie-reviews' },
-    { label: 'Red Carpet Events', to: '/entertainment/red-carpet-events' },
-    { label: 'Award Shows', to: '/entertainment/award-shows' },
-    { label: 'Celebrity Interviews', to: '/entertainment/celebrity-interviews' },
-    { label: 'Behind the Scenes', to: '/entertainment/behind-the-scenes' },
-  ]},
-  { label: 'LIFESTYLE', to: '/lifestyle', dropdown: [
-    { label: 'Fashion & Style', to: '/lifestyle/fashion' },
-    { label: 'Beauty & Skincare', to: '/lifestyle/beauty' },
-    { label: 'Health & Wellness', to: '/lifestyle/health' },
-    { label: 'Food & Recipes', to: '/lifestyle/food' },
-    { label: 'Travel & Destinations', to: '/lifestyle/travel' },
-    { label: 'Home & Decor', to: '/lifestyle/home' },
-    { label: 'Relationships & Dating', to: '/lifestyle/relationships' },
-    { label: 'Parenting & Family', to: '/lifestyle/parenting' },
-  ]},
-  { label: 'CULTURE & SOCIETY', to: '/culture', dropdown: [
-    { label: 'Art & Photography', to: '/culture/art' },
-    { label: 'Books & Literature', to: '/culture/books' },
-    { label: 'Social Issues', to: '/culture/social-issues' },
-    { label: 'Cultural Events', to: '/culture/events' },
-    { label: 'Heritage & Traditions', to: '/culture/heritage' },
-    { label: 'Pop Culture', to: '/culture/pop' },
-    { label: 'Digital Trends', to: '/culture/digital' },
-    { label: 'Youth Culture', to: '/culture/youth' },
-  ]},
-  { label: 'BUSINESS & LEADERSHIP', to: '/business', dropdown: [
-    { label: 'Industry Leaders', to: '/business/industry-leaders' },
-    { label: 'Startup Stories', to: '/business/startups' },
-    { label: 'Women in Business', to: '/business/women' },
-    { label: 'Corporate News', to: '/business/corporate' },
-    { label: 'Economic Trends', to: '/business/economics' },
-    { label: 'Leadership Insights', to: '/business/leadership' },
-    { label: 'Career Advice', to: '/business/career' },
-    { label: 'Money & Finance', to: '/business/finance' },
-  ]},
-  { label: 'REGIONAL FOCUS', to: '/regional', dropdown: [
-    { label: 'UAE Spotlight', to: '/regional/uae' },
-    { label: 'Local Events', to: '/regional/events' },
-    { label: 'Community Heroes', to: '/regional/heroes' },
-    { label: 'Government News', to: '/regional/government' },
-    { label: 'Cultural Festivals', to: '/regional/festivals' },
-    { label: 'Business Hub', to: '/regional/business-hub' },
-    { label: 'Tourism & Attractions', to: '/regional/tourism' },
-    { label: 'Local Personalities', to: '/regional/personalities' },
-  ]},
-  { label: 'SPECIAL SECTIONS', to: '/special', dropdown: [
-  { label: 'Power Lists', to: '/special/power-lists' },
-  { label: 'Annual Awards', to: '/special/awards' },
-  { label: 'Top Doctors', to: '/special/doctors' },
-  { label: 'Women Leaders', to: '/special/women-leaders' },
-  { label: 'Most Influential', to: '/special/influential' },
-  { label: 'Rising Entrepreneurs', to: '/special/entrepreneurs' },
-  { label: 'Social Impact Leaders', to: '/special/social-impact' },
-  ]},
-  { label: 'EVENTS', to: '/events' },
-  { label: 'FLIPBOOK', to: '/flipbook' },
-];
-
 const Header = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [activeDropdown, setActiveDropdown] = useState(null);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [currentDate, setCurrentDate] = useState('');
-  const [temperature] = useState('31°C');
-  const [location] = useState('New York');
-  const [showTopBar, setShowTopBar] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [activeMenu, setActiveMenu] = useState(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const location = useLocation();
+
+  // Replace hardcoded structure with API-driven navigation
+  const [navigationStructure, setNavigationStructure] = useState([]);
 
   useEffect(() => {
-    const now = new Date();
-    setCurrentDate(now.toLocaleDateString('en-US', {
-      weekday: 'short', day: 'numeric', month: 'long'
-    }));
-    
-    // Add scroll listener
-    const handleScroll = () => setIsScrolled(window.scrollY > 50);
+    const toSlug = (t) => `/${t.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-')}`;
+
+    const navigationData = [
+      {
+        name: 'HOME',
+        path: '/',
+        isHome: true,
+        megaMenu: [
+          {
+            category: 'Featured Content',
+            items: [
+              { name: 'Hero Slider', path: '/hero-slider' },
+              { name: 'Trending Tags', path: '/trending-tags' },
+              { name: 'Quick Access', path: '/quick-access' },
+              { name: 'Suggested Reads', path: '/suggested-reads' },
+              { name: 'Newsletter', path: '/newsletter' }
+            ]
+          }
+        ],
+        subcategories: ['Hero Slider', 'Trending Tags', 'Quick Access', 'Suggested Reads', 'Newsletter']
+      },
+      {
+        name: 'PEOPLE & PROFILES',
+        path: toSlug('PEOPLE & PROFILES'),
+        isHome: false,
+        megaMenu: [
+          {
+            category: 'All Categories',
+            items: [
+              { name: 'Celebrity Spotlight', path: `${toSlug('PEOPLE & PROFILES')}${toSlug('Celebrity Spotlight')}` },
+              { name: 'Influencer Stories', path: `${toSlug('PEOPLE & PROFILES')}${toSlug('Influencer Stories')}` },
+              { name: 'Business Leaders', path: `${toSlug('PEOPLE & PROFILES')}${toSlug('Business Leaders')}` },
+              { name: 'Rising Stars', path: `${toSlug('PEOPLE & PROFILES')}${toSlug('Rising Stars')}` },
+              { name: 'Local Personalities', path: `${toSlug('PEOPLE & PROFILES')}${toSlug('Local Personalities')}` },
+              { name: 'International Icons', path: `${toSlug('PEOPLE & PROFILES')}${toSlug('International Icons')}` },
+              { name: 'Changemakers', path: `${toSlug('PEOPLE & PROFILES')}${toSlug('Changemakers')}` },
+              { name: 'Entrepreneurs', path: `${toSlug('PEOPLE & PROFILES')}${toSlug('Entrepreneurs')}` }
+            ]
+          }
+        ],
+        subcategories: ['Celebrity Spotlight', 'Influencer Stories', 'Business Leaders', 'Rising Stars', 'Local Personalities', 'International Icons', 'Changemakers', 'Entrepreneurs']
+      },
+      {
+        name: 'ENTERTAINMENT',
+        path: toSlug('ENTERTAINMENT'),
+        isHome: false,
+        megaMenu: [
+          {
+            category: 'All Categories',
+            items: [
+              { name: 'Bollywood News', path: `${toSlug('ENTERTAINMENT')}${toSlug('Bollywood News')}` },
+              { name: 'Hollywood Updates', path: `${toSlug('ENTERTAINMENT')}${toSlug('Hollywood Updates')}` },
+              { name: 'TV Shows & Series', path: `${toSlug('ENTERTAINMENT')}${toSlug('TV Shows & Series')}` },
+              { name: 'Music & Artists', path: `${toSlug('ENTERTAINMENT')}${toSlug('Music & Artists')}` },
+              { name: 'Movie Reviews', path: `${toSlug('ENTERTAINMENT')}${toSlug('Movie Reviews')}` },
+              { name: 'Red Carpet Events', path: `${toSlug('ENTERTAINMENT')}${toSlug('Red Carpet Events')}` },
+              { name: 'Award Shows', path: `${toSlug('ENTERTAINMENT')}${toSlug('Award Shows')}` },
+              { name: 'Celebrity Interviews', path: `${toSlug('ENTERTAINMENT')}${toSlug('Celebrity Interviews')}` },
+              { name: 'Behind the Scenes', path: `${toSlug('ENTERTAINMENT')}${toSlug('Behind the Scenes')}` }
+            ]
+          }
+        ],
+        subcategories: ['Bollywood News', 'Hollywood Updates', 'TV Shows & Series', 'Music & Artists', 'Movie Reviews', 'Red Carpet Events', 'Award Shows', 'Celebrity Interviews', 'Behind the Scenes']
+      },
+      {
+        name: 'LIFESTYLE',
+        path: toSlug('LIFESTYLE'),
+        isHome: false,
+        megaMenu: [
+          {
+            category: 'All Categories',
+            items: [
+              { name: 'Fashion & Style', path: `${toSlug('LIFESTYLE')}${toSlug('Fashion & Style')}` },
+              { name: 'Beauty & Skincare', path: `${toSlug('LIFESTYLE')}${toSlug('Beauty & Skincare')}` },
+              { name: 'Health & Wellness', path: `${toSlug('LIFESTYLE')}${toSlug('Health & Wellness')}` },
+              { name: 'Food & Recipes', path: `${toSlug('LIFESTYLE')}${toSlug('Food & Recipes')}` },
+              { name: 'Travel & Destinations', path: `${toSlug('LIFESTYLE')}${toSlug('Travel & Destinations')}` },
+              { name: 'Home & Decor', path: `${toSlug('LIFESTYLE')}${toSlug('Home & Decor')}` },
+              { name: 'Relationships & Dating', path: `${toSlug('LIFESTYLE')}${toSlug('Relationships & Dating')}` },
+              { name: 'Parenting & Family', path: `${toSlug('LIFESTYLE')}${toSlug('Parenting & Family')}` }
+            ]
+          }
+        ],
+        subcategories: ['Fashion & Style', 'Beauty & Skincare', 'Health & Wellness', 'Food & Recipes', 'Travel & Destinations', 'Home & Decor', 'Relationships & Dating', 'Parenting & Family']
+      },
+      {
+        name: 'CULTURE & SOCIETY',
+        path: toSlug('CULTURE & SOCIETY'),
+        isHome: false,
+        megaMenu: [
+          {
+            category: 'All Categories',
+            items: [
+              { name: 'Art & Photography', path: `${toSlug('CULTURE & SOCIETY')}${toSlug('Art & Photography')}` },
+              { name: 'Books & Literature', path: `${toSlug('CULTURE & SOCIETY')}${toSlug('Books & Literature')}` },
+              { name: 'Social Issues', path: `${toSlug('CULTURE & SOCIETY')}${toSlug('Social Issues')}` },
+              { name: 'Cultural Events', path: `${toSlug('CULTURE & SOCIETY')}${toSlug('Cultural Events')}` },
+              { name: 'Heritage & Traditions', path: `${toSlug('CULTURE & SOCIETY')}${toSlug('Heritage & Traditions')}` },
+              { name: 'Pop Culture', path: `${toSlug('CULTURE & SOCIETY')}${toSlug('Pop Culture')}` },
+              { name: 'Digital Trends', path: `${toSlug('CULTURE & SOCIETY')}${toSlug('Digital Trends')}` },
+              { name: 'Youth Culture', path: `${toSlug('CULTURE & SOCIETY')}${toSlug('Youth Culture')}` }
+            ]
+          }
+        ],
+        subcategories: ['Art & Photography', 'Books & Literature', 'Social Issues', 'Cultural Events', 'Heritage & Traditions', 'Pop Culture', 'Digital Trends', 'Youth Culture']
+      },
+      {
+        name: 'BUSINESS & LEADERSHIP',
+        path: toSlug('BUSINESS & LEADERSHIP'),
+        isHome: false,
+        megaMenu: [
+          {
+            category: 'All Categories',
+            items: [
+              { name: 'Industry Leaders', path: `${toSlug('BUSINESS & LEADERSHIP')}${toSlug('Industry Leaders')}` },
+              { name: 'Startup Stories', path: `${toSlug('BUSINESS & LEADERSHIP')}${toSlug('Startup Stories')}` },
+              { name: 'Women in Business', path: `${toSlug('BUSINESS & LEADERSHIP')}${toSlug('Women in Business')}` },
+              { name: 'Corporate News', path: `${toSlug('BUSINESS & LEADERSHIP')}${toSlug('Corporate News')}` },
+              { name: 'Economic Trends', path: `${toSlug('BUSINESS & LEADERSHIP')}${toSlug('Economic Trends')}` },
+              { name: 'Leadership Insights', path: `${toSlug('BUSINESS & LEADERSHIP')}${toSlug('Leadership Insights')}` },
+              { name: 'Career Advice', path: `${toSlug('BUSINESS & LEADERSHIP')}${toSlug('Career Advice')}` },
+              { name: 'Money & Finance', path: `${toSlug('BUSINESS & LEADERSHIP')}${toSlug('Money & Finance')}` }
+            ]
+          }
+        ],
+        subcategories: ['Industry Leaders', 'Startup Stories', 'Women in Business', 'Corporate News', 'Economic Trends', 'Leadership Insights', 'Career Advice', 'Money & Finance']
+      },
+      {
+        name: 'REGIONAL FOCUS',
+        path: toSlug('REGIONAL FOCUS'),
+        isHome: false,
+        megaMenu: [
+          {
+            category: 'All Categories',
+            items: [
+              { name: 'UAE Spotlight', path: `${toSlug('REGIONAL FOCUS')}${toSlug('UAE Spotlight')}` },
+              { name: 'Local Events', path: `${toSlug('REGIONAL FOCUS')}${toSlug('Local Events')}` },
+              { name: 'Community Heroes', path: `${toSlug('REGIONAL FOCUS')}${toSlug('Community Heroes')}` },
+              { name: 'Government News', path: `${toSlug('REGIONAL FOCUS')}${toSlug('Government News')}` },
+              { name: 'Cultural Festivals', path: `${toSlug('REGIONAL FOCUS')}${toSlug('Cultural Festivals')}` },
+              { name: 'Business Hub', path: `${toSlug('REGIONAL FOCUS')}${toSlug('Business Hub')}` },
+              { name: 'Tourism & Attractions', path: `${toSlug('REGIONAL FOCUS')}${toSlug('Tourism & Attractions')}` },
+              { name: 'Local Personalities', path: `${toSlug('REGIONAL FOCUS')}${toSlug('Local Personalities')}` }
+            ]
+          }
+        ],
+        subcategories: ['UAE Spotlight', 'Local Events', 'Community Heroes', 'Government News', 'Cultural Festivals', 'Business Hub', 'Tourism & Attractions', 'Local Personalities']
+      },
+      {
+        name: 'SPECIAL SECTIONS',
+        path: toSlug('SPECIAL SECTIONS'),
+        isHome: false,
+        megaMenu: [
+          {
+            category: 'All Categories',
+            items: [
+              { name: 'Power Lists (30 Under 30, 40 Under 40)', path: `${toSlug('SPECIAL SECTIONS')}${toSlug('Power Lists')}` },
+              { name: 'Annual Awards', path: `${toSlug('SPECIAL SECTIONS')}${toSlug('Annual Awards')}` },
+              { name: 'Top Doctors', path: `${toSlug('SPECIAL SECTIONS')}${toSlug('Top Doctors')}` },
+              { name: 'Women Leaders', path: `${toSlug('SPECIAL SECTIONS')}${toSlug('Women Leaders')}` },
+              { name: 'Most Influential', path: `${toSlug('SPECIAL SECTIONS')}${toSlug('Most Influential')}` },
+              { name: 'Rising Entrepreneurs', path: `${toSlug('SPECIAL SECTIONS')}${toSlug('Rising Entrepreneurs')}` },
+              { name: 'Social Impact Leaders', path: `${toSlug('SPECIAL SECTIONS')}${toSlug('Social Impact Leaders')}` }
+            ]
+          }
+        ],
+        subcategories: ['Power Lists (30 Under 30, 40 Under 40)', 'Annual Awards', 'Top Doctors', 'Women Leaders', 'Most Influential', 'Rising Entrepreneurs', 'Social Impact Leaders']
+      }
+    ];
+
+    setNavigationStructure(navigationData);
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Handle dropdown open/close for desktop
-  const handleDropdown = idx => {
-    setActiveDropdown(activeDropdown === idx ? null : idx);
+  const handleMenuHover = (menuName) => {
+    setActiveMenu(menuName);
   };
 
-  // Close dropdown on mobile menu close
-  useEffect(() => {
-    if (!isMenuOpen) setActiveDropdown(null);
-  }, [isMenuOpen]);
-
-  // Responsive: show menu icon below 1000px
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 1000);
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 1000);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  const handleMenuLeave = () => {
+    setActiveMenu(null);
+  };
 
   return (
     <>
-   
+      {/* Header */}
+      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isScrolled
+          ? 'bg-[#ffffff]/95 backdrop-blur-md shadow-lg border-b border-[#1a1a1a]/20'
+          : 'bg-[#ffffff]/80 backdrop-blur-sm'
+      }`}>
+        
+        {/* Merged Header Bar with Weather, Logo, and Stocks */}
+        <div className="bg-[#162048] shadow-lg">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Mobile Layout - Merged Header */}
+            <div className="block xl:hidden">
+              <div className="flex items-center justify-between h-16">
+                {/* Left: Logo */}
+                <Link to="/" className="flex items-center">
+                  <div className="bg-[#ffffff] text-[#162048] px-4 py-2 rounded-lg font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                    MAGAZINE
+                  </div>
+                </Link>
 
-      {/* Main Header */}
-      <header
-        className={`w-full z-50 transition-all duration-300 ${isScrolled ? 'fixed top-0 left-0' : ''}`}
-        style={{ borderBottom: `4px solid ${COLORS.black}`, background: COLORS.white }}
-      >
-        <div className="flex items-stretch justify-between">
-          {/* Logo */}
-          <div
-            className="flex items-center justify-center border-r-4 px-6 py-4 min-w-[180px]"
-            style={{ borderColor: COLORS.black, background: COLORS.white }}
-          >
-            <Link to="/" className="flex items-center">
-              <span
-                className="text-3xl font-extrabold px-4 py-2 rounded-r-full rounded-l-lg"
-                style={{
-                  background: COLORS.blue,
-                  color: COLORS.white,
-                  border: `4px solid ${COLORS.black}`,
-                  fontFamily: 'monospace',
-                  letterSpacing: '2px',
-                }}
-              >
-                NEONPULSE
-              </span>
-            </Link>
+                {/* Right: Social Icons and Menu Icon */}
+                <div className="flex items-center space-x-3">
+                  {/* Social Icons */}
+                  <div className="flex items-center space-x-2">
+                    <a href="#" className="text-[#ffffff] hover:text-[#ffffff]/80 transition-colors">
+                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                      </svg>
+                    </a>
+                    <a href="#" className="text-[#ffffff] hover:text-[#ffffff]/80 transition-colors">
+                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.174-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.099.12.112.225.085.345-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.402.165-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.748-7.252 7.92-7.252 4.158 0 7.392 2.967 7.392 6.923 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.357-.629-2.746-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24.009 12.017 24.009c6.624 0 11.99-5.367 11.99-11.988C24.007 5.367 18.641.001.012.001z"/>
+                      </svg>
+                    </a>
+                    <a href="#" className="text-[#ffffff] hover:text-[#ffffff]/80 transition-colors">
+                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                      </svg>
+                    </a>
+                    <a href="#" className="text-[#ffffff] hover:text-[#ffffff]/80 transition-colors">
+                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                      </svg>
+                    </a>
+                  </div>
+
+                  {/* Menu Icon */}
+                  <button
+                    onClick={() => setIsMobileMenuOpen(true)}
+                    className="p-2 text-[#ffffff] hover:text-[#ffffff]/80 transition-colors rounded-lg hover:bg-[#ffffff]/10"
+                  >
+                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Desktop Layout */}
+            <div className="hidden xl:flex justify-between items-center h-20">
+              {/* Left: Weather and Date */}
+              <div className="flex items-center space-x-3 lg:space-x-4 text-[#ffffff]">
+                <div className="flex items-center space-x-2">
+                  <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                  </svg>
+                  <span>Dubai, UAE</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                  </svg>
+                  <span>{new Date().toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric'
+                  })}</span>
+                </div>
+                <WeatherWidget />
+              </div>
+
+              {/* Center: Magazine Logo */}
+              <div className="flex justify-center">
+                <Link to="/" className="flex items-center">
+                  <div className="bg-[#ffffff] text-[#162048] px-6 py-3 rounded-lg font-bold text-xl md:text-2xl shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105">
+                    MAGAZINE
+                  </div>
+                </Link>
+              </div>
+
+              {/* Right: Stocks and Social */}
+              <div className="flex items-center space-x-3">
+                <StockTicker />
+                <div className="flex items-center space-x-2 text-[#ffffff]">
+                  <a href="#" className="hover:text-[#ffffff] transition-colors">
+                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.174-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.099.12.112.225.085.345-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.402.165-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.748-7.252 7.92-7.252 4.158 0 7.392 2.967 7.392 6.923 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.357-.629-2.746-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24.009 12.017 24.009c6.624 0 11.99-5.367 11.99-11.988C24.007 5.367 18.641.001.012.001z"/>
+                    </svg>
+                  </a>
+                  <a href="#" className="hover:text-[#ffffff] transition-colors">
+                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/>
+                    </svg>
+                  </a>
+                  <a href="#" className="hover:text-[#ffffff] transition-colors">
+                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 0 1-1.93.07 4.28 4.28 0 0 0 4 2.98 8.521 8.521 0 0 1-5.33 1.84c-.34 0-.68-.02-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23z"/>
+                    </svg>
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
+        </div>
 
-          {/* Desktop Navigation */}
-          <nav className={`flex-1 ${isMobile ? 'hidden' : 'flex'} items-center justify-center border-r-4 px-2`}
-            style={{ borderColor: COLORS.black, background: COLORS.white }}>
-            <ul className="flex flex-wrap items-center justify-center gap-6 text-lg font-bold tracking-wide" style={{ color: COLORS.black }}>
-              {NAV_ITEMS.map((item, idx) => (
-                <li key={item.label} className="relative group">
-                  <div className="flex items-center gap-1">
+        {/* Categories Bar - Desktop Only */}
+        <div className="hidden xl:block bg-[#ffffff] border-b border-[#1a1a1a]/20 shadow-sm relative">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-center py-3">
+              <nav className="flex items-center space-x-8 relative">
+                {navigationStructure.map((item, index) => (
+                  <div
+                    key={item.name}
+                    className="relative"
+                    onMouseEnter={() => handleMenuHover(item.name)}
+                    onMouseLeave={handleMenuLeave}
+                  >
                     <Link
-                      to={item.to}
-                      className="hover:bg-[#cacaca] hover:text-white transition-colors px-2 py-1 rounded"
-                      style={{ color: COLORS.black }}
+                      to={item.path}
+                      className={`text-sm font-medium hover:text-[#162048] transition-colors duration-200 whitespace-nowrap px-2 py-1 rounded ${
+                        location.pathname === item.path ? 'text-[#162048] bg-[#ffffff]' : 'text-[#1a1a1a]'
+                      }`}
                     >
-                      {item.label}
+                      {item.name}
                     </Link>
-                    {item.dropdown && (
-                      <button
-                        className="transition flex items-center"
-                        style={{ background: 'none', border: 'none', color: COLORS.black }}
-                        onClick={() => handleDropdown(idx)}
-                        onMouseEnter={() => setActiveDropdown(idx)}
-                        onMouseLeave={() => setActiveDropdown(null)}
-                        tabIndex={-1}
-                        aria-label={`Show ${item.label} dropdown`}
-                      >
-                        <svg className="w-4 h-4 ml-1" fill="none" stroke={COLORS.blue} strokeWidth="2" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                      </button>
+                    {activeMenu === item.name && item.megaMenu && item.megaMenu.length > 0 && item.name !== 'HOME' && (
+                      <div className={`absolute top-full mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50 ${
+                        index >= navigationStructure.length - 2 ? 'right-0' : 'left-0'
+                      }`}>
+                        <div className="p-4">
+                          <h3 className="text-lg font-semibold text-[#162048] mb-3">{item.megaMenu[0].category}</h3>
+                          <div className="grid grid-cols-1 gap-2">
+                            {item.megaMenu[0].items.map((subItem) => (
+                              <Link
+                                key={subItem.name}
+                                to={subItem.path}
+                                className="text-sm text-[#1a1a1a] hover:text-[#162048] hover:bg-gray-50 px-3 py-2 rounded transition-colors duration-200"
+                              >
+                                {subItem.name}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
                     )}
                   </div>
-                  {/* Dropdown */}
-                  {item.dropdown && activeDropdown === idx && (
-                    <div
-                      className="absolute left-0 mt-2 min-w-[220px] bg-white border border-[#162048] rounded shadow-lg py-2 z-20"
-                      onMouseEnter={() => setActiveDropdown(idx)}
-                      onMouseLeave={() => setActiveDropdown(null)}
-                    >
-                      {item.dropdown.map(sub => (
-                        <Link key={sub.label} to={sub.to} className="block px-4 py-2 hover:bg-[#e9e9ea] hover:text-white transition-colors" style={{ color: COLORS.black }}>
-                          {sub.label}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </li>
-              ))}
-              <li>
-                <button
-                  className="ml-4 text-2xl hover:bg-[#162048] hover:text-white transition rounded-full p-1"
-                  aria-label="Search"
-                  onClick={() => setSearchOpen(!searchOpen)}
-                  style={{ color: COLORS.black }}
-                >
-                  <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
-                    <circle cx="11" cy="11" r="8" stroke={COLORS.black} />
-                    <line x1="21" y1="21" x2="16.65" y2="16.65" stroke={COLORS.black} />
-                  </svg>
-                </button>
-              </li>
-            </ul>
-          </nav>
+                ))}
+              </nav>
+            </div>
+          </div>
+        </div>
 
-          {/* Mobile Menu Button & Sign In/Register */}
-          <div className="flex items-center min-w-[80px] border-black" style={{ background: COLORS.white, borderColor: COLORS.black }}>
-            {isMobile && (
-              <button
-                className="flex items-center justify-center w-16 h-full"
-                aria-label={isMenuOpen ? "Close Menu" : "Open Menu"}
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-              >
-                {isMenuOpen ? (
-                  // Close icon
-                  <svg width="32" height="32" viewBox="0 0 32 32">
-                    <line x1="8" y1="10" x2="24" y2="22" stroke={COLORS.black} strokeWidth="3" />
-                    <line x1="24" y1="10" x2="8" y2="22" stroke={COLORS.black} strokeWidth="3" />
-                  </svg>
-                ) : (
-                  // Hamburger icon
-                  <svg width="32" height="32" viewBox="0 0 32 32">
-                    <line x1="8" y1="12" x2="24" y2="12" stroke={COLORS.black} strokeWidth="3" />
-                    <line x1="8" y1="16" x2="24" y2="16" stroke={COLORS.black} strokeWidth="3" />
-                    <line x1="8" y1="20" x2="24" y2="20" stroke={COLORS.black} strokeWidth="3" />
-                  </svg>
-                )}
-              </button>
-            )}
-            <Link
-              to="/login"
-              className="hidden md:flex items-center justify-center px-8 py-4 text-lg font-bold tracking-wide"
-              style={{ color: COLORS.black }}
-            >
-              SIGN IN / REGISTER
-            </Link>
+        {/* Trending News Bar */}
+        <div className="bg-[#ffffff] border-t border-b border-[#1a1a1a]/20">
+          <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2">
+            <TrendingBar />
           </div>
         </div>
       </header>
 
-      {/* Mobile Menu Drawer - Based on screenshots */}
-      {isMobile && isMenuOpen && (
-        <div className="fixed top-[80px] left-0 w-full bg-white border-t-4 border-b-4 border-black z-40 shadow-lg overflow-y-auto h-[calc(100vh-80px)]">
-         
-          <div className="flex justify-end p-4 border-b border-gray-200">
-            <Link to="/login" className="text-lg font-bold" style={{ color: COLORS.black }}>
-              SIGN IN / REGISTER
-            </Link>
-          </div>
-          
-          <div className="py-2">
-            <ul className="text-lg font-bold">
-              {NAV_ITEMS.map((item, idx) => (
-                <li key={item.label} className="border-b border-gray-100">
-                  <div className="flex items-center justify-between px-6 py-4">
-                    <Link to={item.to} style={{ color: COLORS.black }}>
-                      {item.label}
-                    </Link>
-                    {item.dropdown && (
-                      <button
-                        className="p-2"
-                        onClick={() => setActiveDropdown(activeDropdown === idx ? null : idx)}
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                          {activeDropdown === idx ? (
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7"/>
-                          ) : (
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
-                          )}
-                        </svg>
-                      </button>
-                    )}
-                  </div>
-                  {/* Mobile Dropdown */}
-                  {item.dropdown && activeDropdown === idx && (
-                    <ul className="bg-gray-50 py-2">
-                      {item.dropdown.map(sub => (
-                        <li key={sub.label}>
-                          <Link
-                            to={sub.to}
-                            className="block py-2 px-10 hover:bg-[#162048] hover:text-white transition-colors"
-                            onClick={() => setIsMenuOpen(false)}
-                            style={{ color: COLORS.black }}
-                          >
-                            {sub.label}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      )}
-
-      {/* Topbar with date, weather, subscribe, socials */}
-      <div className="w-full bg-[#ffffff] border-b border-[#162048] text-xs">
-        <div className="container mx-auto px-4 flex flex-wrap justify-between items-center py-2">
-          <div className="flex items-center space-x-2 w-full sm:w-auto mb-1 sm:mb-0">
-            <span className="flex items-center font-semibold" style={{ color: COLORS.blue }}>
-              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"/></svg>
-              Trending:
-            </span>
-            <span className="text-[#1a1a1a] inline-block">Elevating Your Office Attire...</span>
-          </div>
-          <div className="flex items-center space-x-4 flex-wrap">
-            <span className="inline-flex items-center mr-2" style={{ color: COLORS.black }}>
-              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-              {currentDate}
-            </span>
-            <span className="inline-flex items-center mr-2" style={{ color: COLORS.black }}>
-              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 15a4 4 0 008 0M21 15a4 4 0 01-8 0"/></svg>
-              {temperature}, {location}
-            </span>
-            <Link to="/subscribe" className="border px-3 py-1 rounded hover:bg-[#162048] hover:text-white font-medium inline-block" style={{ borderColor: COLORS.blue, color: COLORS.black }}>
-              Subscribe
-            </Link>
-            <div className="flex space-x-2 mt-1 sm:mt-0">
-              <a href="#" className="text-[#162048] hover:text-white hover:bg-[#162048] rounded-full p-1 transition-colors"><i className="fab fa-facebook-f"></i></a>
-              <a href="#" className="text-[#162048] hover:text-white hover:bg-[#162048] rounded-full p-1 transition-colors"><i className="fab fa-twitter"></i></a>
-              <a href="#" className="text-[#162048] hover:text-white hover:bg-[#162048] rounded-full p-1 transition-colors"><i className="fab fa-instagram"></i></a>
-              <a href="#" className="text-[#162048] hover:text-white hover:bg-[#162048] rounded-full p-1 transition-colors"><i className="fab fa-youtube"></i></a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Search Overlay */}
-      {searchOpen && (
-        <div className="fixed inset-0 bg-[#ffffffee] z-50 flex items-center justify-center">
-          <form className="flex items-center bg-white border-2 border-[#162048] rounded-lg px-4 py-2 shadow-lg w-[90%] max-w-md">
-            <input
-              type="search"
-              placeholder="Search..."
-              className="w-full px-4 py-2 border-none focus:outline-none text-[#1a1a1a] bg-transparent"
-            />
-            <button type="submit" className="ml-2 text-[#162048] text-xl font-bold">
-              <svg className="w-6 h-6" fill="none" stroke="#162048" strokeWidth="3" viewBox="0 0 24 24">
-                <circle cx="11" cy="11" r="8" stroke="#162048" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" stroke="#162048" />
-              </svg>
-            </button>
-          </form>
-          <button
-            className="absolute top-8 right-8 text-3xl font-bold"
-            aria-label="Close Search"
-            onClick={() => setSearchOpen(false)}
-            style={{ color: COLORS.black }}
-          >
-            ×
-          </button>
-        </div>
-      )}
+      {/* Mobile Menu */}
+      <MobileMenu
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+        navigationStructure={navigationStructure}
+      />
     </>
   );
 };

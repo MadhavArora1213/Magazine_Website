@@ -1,12 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { TransitionProvider, useTransition } from './context/TransitionContext';
+import { AuthProvider } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 import Loading from './Components/Loading';
 import Header from './Components/Header';
 import Footer from './Components/Footer';
-import Popup from './Components/Popup';
+import ToastContainer from './Components/ToastContainer';
+// Authentication Components
+import { LoginForm, RegisterForm, ForgotPasswordForm, ResetPasswordForm, VerifyEmail, MFASetup, UserProfile, RoleManagement } from './components/Auth';
+// CMS Components
+import { CMSDashboard } from './components/CMS';
+// Article Components
+import ArticleRenderer from './Components/ArticleRenderer';
 import HomePage from './Pages/HomePage';
 import AboutPage from './Pages/AboutPage';
+import Dashboard from './Pages/Dashboard';
 import PrivacyPolicySection from './Components/PrivacyPolicySection';
 import TermsAndConditions from './Pages/TermsAndConditions';
 import CookiePolicySection from './Components/Cookie_Policy';
@@ -31,10 +40,17 @@ import PressReleases from './Pages/PressReleases';
 import RSSFeeds from './Pages/RSSFeeds';
 import Archive from './Pages/Archive';
 import SiteSearch from './Pages/SiteSearch';
+// Import new module components
+import { AdvancedSearch, SearchResults, SearchSuggestions, SavedSearches } from './Components/Search';
+import { MediaLibrary, MediaUploader, ImageGallery, VideoPlayer, MediaEditor, MediaMetadata, BulkMediaActions } from './Components/Media';
+import { NewsletterSignup, NewsletterPreferences, NewsletterBuilder, EmailTemplateEditor, WhatsAppIntegration, CommunicationLog, SubscriberManagement, NewsletterManagement } from './Components/Newsletter';
 import NewsletterArchive from './Pages/NewsletterArchive';
+import NewsletterConfirm from './Pages/NewsletterConfirm';
+import NewsletterSuccess from './Pages/NewsletterSuccess';
 import AdvertisingEnquiries from './Pages/AdvertisingEnquiries';
 import EventsPage from './Pages/EventsPage';
 import Flipbook from './Pages/Flipbook';
+import TrendingPage from './Pages/TrendingPage';
 import Entertainment from './Pages/Category/Entertainment'; // <-- Add this import
 import PeopleProfile from './Pages/Category/People&Profile';
 import Lifestyle from './Pages/Category/Lifestyle'; // Add this import
@@ -60,14 +76,17 @@ import TvShowsSeries from './Pages/SubCategory/Entertainment/TvShows&Series';
 import AwardShows from './Pages/SubCategory/Entertainment/AwardShows';
 import BehindTheScenes from './Pages/SubCategory/Entertainment/BehindTheScenes';
 import AdminIndex from './Admin/AdminIndex';
+import NewsletterSubscriptionPopup from './Components/Newsletter/NewsletterSubscriptionPopup';
+import { useAuth } from './context/AuthContext';
+import { Navigate } from 'react-router-dom';
 
 // RouteChangeDetector for detecting route changes
-const RouteChangeDetector = ({ children }) => {
+const RouteChangeDetector = ({ children, excludeLoading = false }) => {
   const { isLoading, setIsLoading } = useTransition();
-  
+
   return (
     <>
-      <Loading isLoading={isLoading} setIsLoading={setIsLoading} />
+      {!excludeLoading && <Loading isLoading={isLoading} setIsLoading={setIsLoading} />}
       {children}
     </>
   );
@@ -78,25 +97,63 @@ const MainSiteLayout = ({ children }) => (
     <Header />
     <main className="flex-grow pt-20">{children}</main>
     <Footer />
-    <Popup />
   </>
 );
 
 function App() {
-  return (
-    <TransitionProvider>
-      <Router>
-        <Routes>
-          {/* Admin panel: no header/footer */}
-          <Route path="/admin/*" element={<AdminIndex />} />
+  const [showNewsletterPopup, setShowNewsletterPopup] = useState(false);
 
-          {/* Main site: header/footer shown */}
-          <Route
-            path="*"
-            element={
-              <RouteChangeDetector>
-                <MainSiteLayout>
-                  <Routes>
+  useEffect(() => {
+    // Check if user has already seen/dismissed the newsletter popup
+    const hasSeenNewsletter = localStorage.getItem('newsletter-popup-seen');
+    const hasSubscribed = localStorage.getItem('newsletter-subscribed');
+
+    // Show popup if user hasn't seen it and hasn't subscribed
+    if (!hasSeenNewsletter && !hasSubscribed) {
+      // Show after a short delay to not interrupt initial page load
+      const timer = setTimeout(() => {
+        setShowNewsletterPopup(true);
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const handleNewsletterSubscribe = (subscriptionData) => {
+    // Mark as subscribed to prevent showing popup again
+    localStorage.setItem('newsletter-subscribed', 'true');
+    setShowNewsletterPopup(false);
+  };
+
+  const handleNewsletterClose = () => {
+    // Mark as seen to prevent showing popup again
+    localStorage.setItem('newsletter-popup-seen', 'true');
+    setShowNewsletterPopup(false);
+  };
+
+  return (
+    <ToastProvider>
+      <AuthProvider>
+        <TransitionProvider>
+          <Router>
+          <Routes>
+            {/* Admin panel: no header/footer */}
+            <Route path="/admin/*" element={<AdminIndex />} />
+
+            {/* Authentication routes - no loading animation */}
+            <Route path="/login" element={<LoginForm />} />
+            <Route path="/register" element={<RegisterForm />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/forgot-password" element={<ForgotPasswordForm />} />
+            <Route path="/reset-password/:token" element={<ResetPasswordForm />} />
+
+            {/* Main site: header/footer shown with loading animation */}
+            <Route
+              path="*"
+              element={
+                <RouteChangeDetector>
+                  <MainSiteLayout>
+                    <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route path="/about" element={<AboutPage />} />
                     <Route path="/our-team" element={<OurTeam />} />
@@ -124,11 +181,47 @@ function App() {
                     <Route path="/rss" element={<RSSFeeds />} />
                     <Route path="/archive" element={<Archive />} />
                     <Route path="/search" element={<SiteSearch />} />
+                    <Route path="/advanced-search" element={<AdvancedSearch />} />
+                    <Route path="/search-results" element={<SearchResults />} />
+                    <Route path="/search-suggestions" element={<SearchSuggestions />} />
+                    <Route path="/saved-searches" element={<SavedSearches />} />
+                    <Route path="/media-library" element={<MediaLibrary showUploader={false} />} />
+                    <Route path="/media-upload" element={<MediaUploader />} />
+                    <Route path="/image-gallery" element={<ImageGallery />} />
+                    <Route path="/video-player" element={<VideoPlayer />} />
+                    <Route path="/media-editor" element={<MediaEditor />} />
+                    <Route path="/media-metadata" element={<MediaMetadata />} />
+                    <Route path="/bulk-media-actions" element={<BulkMediaActions />} />
                     <Route path="/newsletter-archive" element={<NewsletterArchive />} />
+                    <Route path="/newsletter/confirm" element={<NewsletterConfirm />} />
+                    <Route path="/newsletter/success" element={<NewsletterSuccess />} />
+                    <Route path="/newsletter-signup" element={<NewsletterSignup />} />
+                    <Route path="/newsletter-preferences" element={<NewsletterPreferences />} />
+                    <Route path="/newsletter-builder" element={<NewsletterBuilder />} />
+                    <Route path="/email-template-editor" element={<EmailTemplateEditor />} />
+                    <Route path="/whatsapp-integration" element={<WhatsAppIntegration />} />
+                    <Route path="/communication-log" element={<CommunicationLog />} />
+                    <Route path="/subscriber-management" element={<SubscriberManagement />} />
+                    <Route path="/newsletter-management" element={<NewsletterManagement />} />
                     <Route path="/advertising" element={<AdvertisingEnquiries />} />
                     <Route path="/events" element={<EventsPage />} />
                     <Route path="/flipbook" element={<Flipbook />} />
-                    
+                    <Route path="/flipbook/:id" element={<Flipbook />} />
+                    <Route path="/trending" element={<TrendingPage />} />
+
+                    {/* Protected routes */}
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/profile" element={<UserProfile />} />
+                    <Route path="/mfa-setup" element={<MFASetup />} />
+                    <Route path="/admin/roles" element={<RoleManagement />} />
+
+                    {/* CMS routes */}
+                    <Route path="/cms/*" element={<CMSDashboard />} />
+
+                    {/* Article routes */}
+                    <Route path="/articles/:id" element={<ArticleRenderer />} />
+                    <Route path="/article/:id" element={<ArticleRenderer />} />
+
                     {/* Category routes */}
                     <Route path="/entertainment" element={<Entertainment />} />
                     <Route path="/people" element={<PeopleProfile />} />
@@ -164,8 +257,21 @@ function App() {
             }
           />
         </Routes>
+
+        {/* Newsletter Subscription Popup */}
+        {showNewsletterPopup && (
+          <NewsletterSubscriptionPopup
+            onSubscribe={handleNewsletterSubscribe}
+            onClose={handleNewsletterClose}
+          />
+        )}
+
+        {/* Toast Notifications */}
+        <ToastContainer />
       </Router>
-    </TransitionProvider>
+        </TransitionProvider>
+      </AuthProvider>
+    </ToastProvider>
   );
 }
 

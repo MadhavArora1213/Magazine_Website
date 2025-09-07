@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Popup from './Popup'; // Import the Popup component
 
 const Loading = ({ isLoading, setIsLoading }) => {
   const [progress, setProgress] = useState(0);
   const [loadingPhase, setLoadingPhase] = useState('initial');
-  const [showPopup, setShowPopup] = useState(false);
   const svgRef = useRef(null);
   
   // Controls the loading progress simulation
@@ -34,10 +32,6 @@ const Loading = ({ isLoading, setIsLoading }) => {
             setTimeout(() => {
               setLoadingPhase('exit');
               
-              // Show popup after transition - this will activate the Popup.jsx component
-              setTimeout(() => {
-                setShowPopup(true);
-              }, 600);
               
               // Complete the loading process after transition
               setTimeout(() => {
@@ -131,6 +125,9 @@ const Loading = ({ isLoading, setIsLoading }) => {
                           duration: 2.5,
                           ease: "easeInOut"
                         }}
+                        initial={{
+                          d: "M0,10 C20,18, 40,2, 60,10 C80,18, 100,2, 120,10 C140,18, 160,2, 180,10 C200,18, 220,2, 240,10"
+                        }}
                       />
                     </pattern>
                     
@@ -151,6 +148,9 @@ const Loading = ({ isLoading, setIsLoading }) => {
                           repeatType: "reverse",
                           duration: 3.5,
                           ease: "easeInOut"
+                        }}
+                        initial={{
+                          d: "M0,10 C25,16, 50,4, 75,10 C100,16, 125,4, 150,10 C175,16, 200,4, 225,10 C250,16, 275,4, 300,10"
                         }}
                       />
                     </pattern>
@@ -173,6 +173,9 @@ const Loading = ({ isLoading, setIsLoading }) => {
                           duration: 4.5,
                           ease: "easeInOut"
                         }}
+                        initial={{
+                          d: "M0,10 C33,15, 67,5, 100,10 C133,15, 167,5, 200,10 C233,15, 267,5, 300,10 C333,15, 367,5, 400,10"
+                        }}
                       />
                     </pattern>
                     
@@ -193,6 +196,9 @@ const Loading = ({ isLoading, setIsLoading }) => {
                           repeatType: "reverse",
                           duration: 3,
                           ease: "easeInOut"
+                        }}
+                        initial={{
+                          d: "M0,20 C50,8, 100,12, 150,4 C200,12, 250,8, 300,12 C350,8, 400,12, 400,20 L400,20 L0,20 Z"
                         }}
                       />
                     </pattern>
@@ -463,8 +469,6 @@ const Loading = ({ isLoading, setIsLoading }) => {
         )}
       </AnimatePresence>
 
-      {/* Use the external Popup component here */}
-      {/* {showPopup && <Popup />} */}
     </>
   );
 };

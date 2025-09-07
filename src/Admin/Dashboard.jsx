@@ -1,248 +1,362 @@
-import React from "react";
-import { Link } from "react-router-dom";
-import { useTheme } from "./context/ThemeContext";
-
-// Mock data
-const stats = [
-  { label: "Total Categories", value: 12 },
-  { label: "Active Categories", value: 9 },
-  { label: "Inactive Categories", value: 3 },
-  { label: "Total Articles", value: 120 },
-];
-
-const recentCategories = [
-  { name: "Bollywood", status: "Active", created: "2025-08-20" },
-  { name: "Technology", status: "Inactive", created: "2025-08-18" },
-  { name: "Fashion", status: "Active", created: "2025-08-15" },
-];
-
-const recentActivity = [
-  { action: "Created", target: "Category: Sports", date: "2025-08-21" },
-  { action: "Updated", target: "Category: Bollywood", date: "2025-08-20" },
-  { action: "Deleted", target: "Category: Health", date: "2025-08-19" },
-];
+import React, { useState, useEffect } from 'react';
+import { useAdminAuth } from './context/AdminAuthContext';
 
 const Dashboard = () => {
-  const { theme, toggleTheme } = useTheme();
-  const isDark = theme === "dark";
+  const { admin, logout, isLoading: authLoading, checkAuthStatus } = useAdminAuth();
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const bgMain = isDark ? "bg-black" : "bg-white";
-  const textMain = isDark ? "text-white" : "text-black";
-  const cardBg = isDark
-    ? "bg-gradient-to-br from-gray-900 via-black to-gray-800 border border-white/10"
-    : "bg-gradient-to-br from-white via-gray-50 to-gray-200 border border-black/10";
-  // Removed shadow from cards
-  const cardShadow = ""; // <-- No shadow
-  const tableHead = isDark ? "bg-gray-900 text-white" : "bg-gray-100 text-black";
-  const tableRowEven = isDark ? "bg-black" : "bg-white";
-  const tableRowOdd = isDark ? "bg-gray-800" : "bg-gray-50";
-  const iconStroke = isDark ? "#fff" : "#000";
-  const btnTheme =
-    "rounded-lg px-4 py-2 font-semibold transition border focus:outline-none";
-  const btnThemeActive = isDark
-    ? "bg-white text-black border-white hover:bg-gray-200"
-    : "bg-black text-white border-black hover:bg-gray-900";
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
+  useEffect(() => {
+    // Wait for authentication to be ready before fetching data
+    if (!authLoading && admin) {
+      fetchDashboardData();
+    } else if (!authLoading && !admin) {
+      setError('Please log in to access the dashboard');
+      setLoading(false);
+    }
+  }, [authLoading, admin]);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const base = import.meta?.env?.VITE_API_URL || 'http://localhost:5000';
+
+      // Fetch dashboard analytics using cookies (same as AdminAuthContext)
+      const analyticsResponse = await fetch(`${base}/api/analytics/dashboard`, {
+        method: 'GET',
+        credentials: 'include', // Include cookies for authentication
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!analyticsResponse.ok) {
+        if (analyticsResponse.status === 401) {
+          // Try to refresh authentication status
+          await checkAuthStatus();
+          throw new Error('Session expired. Please refresh the page or log in again.');
+        }
+        throw new Error('Failed to fetch analytics data');
+      }
+
+      const analyticsData = await analyticsResponse.json();
+
+      // Fetch categories count
+      const categoriesResponse = await fetch(`${base}/api/articles/categories`, {
+        method: 'GET',
+        credentials: 'include', // Include cookies for authentication
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      let categoriesCount = 0;
+      if (categoriesResponse.ok) {
+        const categoriesData = await categoriesResponse.json();
+        categoriesCount = categoriesData.data?.length || 0;
+      } else if (categoriesResponse.status === 401) {
+        await checkAuthStatus();
+        throw new Error('Session expired. Please refresh the page or log in again.');
+      }
+
+      // Fetch articles count
+      const articlesResponse = await fetch(`${base}/api/articles`, {
+        method: 'GET',
+        credentials: 'include', // Include cookies for authentication
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      let articlesCount = 0;
+      if (articlesResponse.ok) {
+        const articlesData = await articlesResponse.json();
+        articlesCount = articlesData.data?.length || 0;
+      } else if (articlesResponse.status === 401) {
+        await checkAuthStatus();
+        throw new Error('Session expired. Please refresh the page or log in again.');
+      }
+
+      setDashboardData({
+        analytics: analyticsData.data,
+        categoriesCount,
+        articlesCount
+      });
+
+    } catch (error) {
+      console.error('Dashboard data fetch error:', error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (authLoading || loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-white text-xl">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="bg-red-900/20 border border-red-500 rounded-lg p-6 max-w-md">
+            <h2 className="text-red-400 font-semibold mb-2">Error Loading Dashboard</h2>
+            <p className="text-red-300 text-sm mb-4">{error}</p>
+            <div className="space-x-3">
+              <button
+                onClick={() => window.location.href = '/admin/login'}
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              >
+                Go to Login
+              </button>
+              <button
+                onClick={fetchDashboardData}
+                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // If not authenticated, show login prompt
+  if (!admin) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="bg-yellow-900/20 border border-yellow-500 rounded-lg p-6 max-w-md">
+            <h2 className="text-yellow-400 font-semibold mb-2">Authentication Required</h2>
+            <p className="text-yellow-300 text-sm mb-4">Please log in to access the admin dashboard.</p>
+            <button
+              onClick={() => window.location.href = '/admin/login'}
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-semibold"
+            >
+              Go to Login
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const { analytics, categoriesCount, articlesCount } = dashboardData || {};
 
   return (
-    <div className={`min-h-screen ${bgMain} py-6 px-2 md:px-6 transition-colors duration-300`}>
+    <div className="min-h-screen bg-black py-2 px-1 md:px-2 transition-colors duration-300">
       <div className="max-w-7xl mx-auto w-full">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4">
           <div>
-            <h1 className={`text-2xl md:text-4xl font-black mb-1 tracking-tight flex items-center gap-2 ${textMain}`}>
-              <svg width="36" height="36" fill="none" stroke={iconStroke} strokeWidth="2.5" viewBox="0 0 24 24">
+            <h1 className="text-2xl md:text-4xl font-black mb-1 tracking-tight flex items-center gap-2 text-white">
+              <svg width="36" height="36" fill="none" stroke="#fff" strokeWidth="2.5" viewBox="0 0 24 24">
                 <rect x="3" y="7" width="18" height="10" rx="4" />
                 <circle cx="8" cy="12" r="2" />
               </svg>
-              Magazine Admin
+              Magazine Admin Dashboard
             </h1>
-            <p className={`text-base md:text-lg ${isDark ? "text-gray-300" : "text-gray-600"}`}>
-              Welcome! Manage your magazine categories and settings below.
+            <p className="text-base md:text-lg text-gray-300">
+              Real-time analytics and content management overview.
             </p>
           </div>
           <div className="flex flex-col items-start md:items-end gap-2">
-            <span className={`px-4 py-2 rounded-lg font-semibold ${isDark ? "bg-gray-800 text-white" : "bg-gray-100 text-black"}`}>
-              Role: <span className="font-bold">Administrator</span>
+            <span className="px-4 py-2 rounded-lg font-semibold bg-gray-800 text-white">
+              Role: <span className="font-bold">{admin?.role || 'Administrator'}</span>
             </span>
             <span className="text-gray-400 text-xs">
               Last login: {new Date().toLocaleString()}
             </span>
             <button
-              className={`${btnTheme} ${btnThemeActive} mt-2 flex items-center gap-2`}
-              onClick={toggleTheme}
-              aria-label="Toggle theme"
+              onClick={handleLogout}
+              className="mt-2 bg-white text-black px-4 py-2 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
             >
-              {isDark ? (
-                <>
-                  <svg width="18" height="18" fill="none" stroke="#000" strokeWidth="2" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="5" />
-                    <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-                  </svg>
-                  <span className="hidden sm:inline">Light Mode</span>
-                </>
-              ) : (
-                <>
-                  <svg width="18" height="18" fill="none" stroke="#fff" strokeWidth="2" viewBox="0 0 24 24">
-                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                  </svg>
-                  <span className="hidden sm:inline">Dark Mode</span>
-                </>
-              )}
+              Logout
             </button>
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {stats.map((stat) => (
-            <div
-              key={stat.label}
-              className={`rounded-xl p-6 flex flex-col items-center justify-center ${cardBg} ${cardShadow} w-full`}
-            >
-              <span className={`text-3xl font-extrabold ${textMain}`}>{stat.value}</span>
-              <span className="text-xs font-semibold text-gray-500 dark:text-gray-300 mt-2 text-center">{stat.label}</span>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-gradient-to-br from-gray-900 via-black to-gray-800 border border-white/10 rounded-xl p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-10 h-10 bg-blue-500 rounded-md flex items-center justify-center">
+                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-300 truncate">Total Articles</dt>
+                  <dd className="text-2xl font-bold text-white">{articlesCount}</dd>
+                </dl>
+              </div>
             </div>
-          ))}
+          </div>
+
+          <div className="bg-gradient-to-br from-gray-900 via-black to-gray-800 border border-white/10 rounded-xl p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-10 h-10 bg-green-500 rounded-md flex items-center justify-center">
+                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-300 truncate">Categories</dt>
+                  <dd className="text-2xl font-bold text-white">{categoriesCount}</dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-gray-900 via-black to-gray-800 border border-white/10 rounded-xl p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-10 h-10 bg-purple-500 rounded-md flex items-center justify-center">
+                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                    <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-300 truncate">Total Views</dt>
+                  <dd className="text-2xl font-bold text-white">{analytics?.traffic?.totalViews || 0}</dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-gray-900 via-black to-gray-800 border border-white/10 rounded-xl p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-10 h-10 bg-yellow-500 rounded-md flex items-center justify-center">
+                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                  </svg>
+                </div>
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-300 truncate">Unique Visitors</dt>
+                  <dd className="text-2xl font-bold text-white">{analytics?.traffic?.uniqueVisitors || 0}</dd>
+                </dl>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Graph & Table & Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-          {/* Graph Placeholder */}
-          <div className={`rounded-2xl p-6 ${cardBg} ${cardShadow} flex flex-col items-center justify-center min-h-[260px] col-span-1`}>
-            <span className={`font-bold mb-2 ${textMain}`}>Category Growth (Mock)</span>
-            {/* Simple SVG Bar Chart as placeholder */}
-            <svg width="100%" height="120" viewBox="0 0 220 120" className="w-full max-w-xs">
-              <rect x="20" y="60" width="30" height="40" fill={isDark ? "#fff" : "#000"} opacity="0.7" />
-              <rect x="70" y="40" width="30" height="60" fill={isDark ? "#fff" : "#000"} opacity="0.7" />
-              <rect x="120" y="20" width="30" height="80" fill={isDark ? "#fff" : "#000"} opacity="0.7" />
-              <rect x="170" y="50" width="30" height="50" fill={isDark ? "#fff" : "#000"} opacity="0.7" />
-            </svg>
-            <span className="text-xs text-gray-400 mt-2">Bar chart placeholder</span>
-          </div>
-          {/* Recent Categories Table */}
-          <div className={`rounded-2xl p-0 overflow-hidden ${cardBg} ${cardShadow} col-span-1`}>
-            <div className="p-6 pb-2">
-              <span className={`font-bold ${textMain}`}>Recent Categories</span>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead>
-                  <tr className={tableHead}>
-                    <th className="py-3 px-4 text-left font-semibold">Name</th>
-                    <th className="py-3 px-4 text-left font-semibold">Status</th>
-                    <th className="py-3 px-4 text-left font-semibold">Created</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentCategories.map((cat, idx) => (
-                    <tr
-                      key={cat.name}
-                      className={idx % 2 === 0 ? tableRowEven : tableRowOdd}
-                    >
-                      <td className={`py-2 px-4 font-medium ${textMain}`}>{cat.name}</td>
-                      <td className="py-2 px-4">
-                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                          cat.status === "Active"
-                            ? "bg-black text-white"
-                            : "bg-white text-black border border-black"
-                        }`}>
-                          {cat.status}
-                        </span>
-                      </td>
-                      <td className={`py-2 px-4 ${isDark ? "text-gray-300" : "text-gray-600"}`}>{cat.created}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        {/* Analytics Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Device Breakdown */}
+          <div className="bg-gradient-to-br from-gray-900 via-black to-gray-800 border border-white/10 rounded-xl p-6">
+            <h3 className="text-lg leading-6 font-medium text-white mb-4">Device Breakdown</h3>
+            <div className="space-y-4">
+              {analytics?.deviceBreakdown?.map((device, index) => (
+                <div key={index} className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className={`w-3 h-3 rounded-full mr-3 ${
+                      device.deviceType === 'mobile' ? 'bg-blue-500' :
+                      device.deviceType === 'desktop' ? 'bg-green-500' : 'bg-yellow-500'
+                    }`}></div>
+                    <span className="text-sm font-medium text-white capitalize">
+                      {device.deviceType}
+                    </span>
+                  </div>
+                  <span className="text-sm text-gray-300">{device.count}</span>
+                </div>
+              )) || (
+                <p className="text-gray-400 text-sm">No device data available</p>
+              )}
             </div>
           </div>
-          {/* Recent Activity */}
-          <div className={`rounded-2xl p-0 overflow-hidden ${cardBg} ${cardShadow} col-span-1`}>
-            <div className="p-6 pb-2">
-              <span className={`font-bold ${textMain}`}>Recent Activity</span>
+
+          {/* Geographic Data */}
+          <div className="bg-gradient-to-br from-gray-900 via-black to-gray-800 border border-white/10 rounded-xl p-6">
+            <h3 className="text-lg leading-6 font-medium text-white mb-4">Top Countries</h3>
+            <div className="space-y-4">
+              {analytics?.geographicData?.slice(0, 5).map((country, index) => (
+                <div key={index} className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-red-500 rounded-full mr-3"></div>
+                    <span className="text-sm font-medium text-white">
+                      {country.country || 'Unknown'}
+                    </span>
+                  </div>
+                  <span className="text-sm text-gray-300">{country.visits}</span>
+                </div>
+              )) || (
+                <p className="text-gray-400 text-sm">No geographic data available</p>
+              )}
             </div>
-            <ul className="divide-y divide-gray-200 dark:divide-gray-800">
-              {recentActivity.map((item, idx) => (
-                <li key={idx} className="px-6 py-3 flex items-center gap-3">
-                  <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${
-                    item.action === "Created"
-                      ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200"
-                      : item.action === "Updated"
-                      ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-200"
-                      : "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200"
-                  }`}>
-                    {item.action}
+          </div>
+        </div>
+
+        {/* Engagement Metrics */}
+        <div className="bg-gradient-to-br from-gray-900 via-black to-gray-800 border border-white/10 rounded-xl p-6 mb-8">
+          <h3 className="text-lg leading-6 font-medium text-white mb-6">Engagement Overview</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-blue-400">{analytics?.engagement?.article_view || 0}</div>
+              <div className="text-sm text-gray-300 mt-2">Article Views</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-green-400">{analytics?.engagement?.comment_posted || 0}</div>
+              <div className="text-sm text-gray-300 mt-2">Comments</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-purple-400">{analytics?.engagement?.social_share || 0}</div>
+              <div className="text-sm text-gray-300 mt-2">Social Shares</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Top Articles */}
+        <div className="bg-gradient-to-br from-gray-900 via-black to-gray-800 border border-white/10 rounded-xl p-6">
+          <h3 className="text-lg leading-6 font-medium text-white mb-4">Top Performing Articles</h3>
+          <div className="space-y-4">
+            {analytics?.topArticles?.slice(0, 5).map((article, index) => (
+              <div key={article.id || index} className="flex items-center justify-between py-3 border-b border-gray-700 last:border-b-0">
+                <div className="flex-1">
+                  <h4 className="text-sm font-medium text-white truncate">{article.title}</h4>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {article.recentViews || 0} recent views
+                  </p>
+                </div>
+                <div className="ml-4 flex-shrink-0">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-600 text-white">
+                    #{index + 1}
                   </span>
-                  <span className={`flex-1 truncate ${textMain}`}>{item.target}</span>
-                  <span className="text-xs text-gray-400">{item.date}</span>
-                </li>
-              ))}
-            </ul>
+                </div>
+              </div>
+            )) || (
+              <p className="text-gray-400 text-sm">No article data available</p>
+            )}
           </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Link
-            to="/admin/category/all"
-            className={`group transition rounded-xl p-6 flex flex-col items-center border ${isDark
-              ? "bg-black border-white/10 hover:bg-gray-800"
-              : "bg-white border-black/10 hover:bg-gray-100"}`}
-          >
-            <span className="mb-2">
-              <svg width="36" height="36" fill="none" stroke={iconStroke} strokeWidth="2.5" viewBox="0 0 24 24">
-                <rect x="4" y="7" width="16" height="2" rx="1" />
-                <rect x="4" y="15" width="16" height="2" rx="1" />
-              </svg>
-            </span>
-            <span className={`font-semibold text-base ${textMain}`}>All Categories</span>
-            <span className="text-xs mt-1 text-center opacity-70">View and manage all categories</span>
-          </Link>
-          <Link
-            to="/admin/category/create"
-            className={`group transition rounded-xl p-6 flex flex-col items-center border ${isDark
-              ? "bg-black border-white/10 hover:bg-gray-800"
-              : "bg-white border-black/10 hover:bg-gray-100"}`}
-          >
-            <span className="mb-2">
-              <svg width="36" height="36" fill="none" stroke={iconStroke} strokeWidth="2.5" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="9" />
-                <path d="M12 8v8M8 12h8" strokeLinecap="round" />
-              </svg>
-            </span>
-            <span className={`font-semibold text-base ${textMain}`}>Create Category</span>
-            <span className="text-xs mt-1 text-center opacity-70">Add a new category</span>
-          </Link>
-          <Link
-            to="/admin/category/update"
-            className={`group transition rounded-xl p-6 flex flex-col items-center border ${isDark
-              ? "bg-black border-white/10 hover:bg-gray-800"
-              : "bg-white border-black/10 hover:bg-gray-100"}`}
-          >
-            <span className="mb-2">
-              <svg width="36" height="36" fill="none" stroke={iconStroke} strokeWidth="2.5" viewBox="0 0 24 24">
-                <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19.5 3 21l1.5-4L16.5 3.5z" />
-              </svg>
-            </span>
-            <span className={`font-semibold text-base ${textMain}`}>Update Category</span>
-            <span className="text-xs mt-1 text-center opacity-70">Edit category details</span>
-          </Link>
-          <Link
-            to="/admin/category/delete"
-            className={`group transition rounded-xl p-6 flex flex-col items-center border ${isDark
-              ? "bg-black border-white/10 hover:bg-gray-800"
-              : "bg-white border-black/10 hover:bg-gray-100"}`}
-          >
-            <span className="mb-2">
-              <svg width="36" height="36" fill="none" stroke={iconStroke} strokeWidth="2.5" viewBox="0 0 24 24">
-                <rect x="5" y="7" width="14" height="12" rx="2" />
-                <path d="M9 11v6M15 11v6" strokeLinecap="round" />
-                <path d="M10 7V5a2 2 0 0 1 4 0v2" />
-              </svg>
-            </span>
-            <span className={`font-semibold text-base ${textMain}`}>Delete Category</span>
-            <span className="text-xs mt-1 text-center opacity-70">Remove categories</span>
-          </Link>
         </div>
       </div>
     </div>

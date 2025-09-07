@@ -1,6 +1,26 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-const AdminAuthContext = createContext();
+const AdminAuthContext = createContext({
+  admin: null,
+  loading: true,
+  error: null,
+  login: () => {},
+  logout: () => {},
+  updateProfile: () => {},
+  changePassword: () => {},
+  hasPermission: () => false,
+  hasRole: () => false,
+  isMasterAdmin: () => false,
+  isContentAdmin: () => false,
+  isEditorInChief: () => false,
+  isSectionEditor: () => false,
+  isWriter: () => false,
+  isContributor: () => false,
+  isReviewer: () => false,
+  isSocialMediaManager: () => false,
+  isWebmaster: () => false,
+  checkAuthStatus: () => {}
+});
 
 export const useAdminAuth = () => {
   const context = useContext(AdminAuthContext);
@@ -28,22 +48,31 @@ export const AdminAuthProvider = ({ children }) => {
         return;
       }
 
-      const response = await fetch('http://localhost:5000/api/admin/auth/profile', {
+      const response = await fetch('http://localhost:5000/api/admin/auth/status', {
+        method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include' // Include cookies
       });
 
       if (response.ok) {
         const data = await response.json();
-        setAdmin(data.admin);
+        if (data.authenticated) {
+          setAdmin(data.admin);
+        } else {
+          localStorage.removeItem('adminToken');
+          localStorage.removeItem('adminInfo');
+        }
       } else {
         localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminInfo');
       }
     } catch (error) {
       console.error('Auth check error:', error);
       localStorage.removeItem('adminToken');
+      localStorage.removeItem('adminInfo');
     } finally {
       setLoading(false);
     }
@@ -59,6 +88,7 @@ export const AdminAuthProvider = ({ children }) => {
         headers: {
           'Content-Type': 'application/json'
         },
+        credentials: 'include', // Include cookies
         body: JSON.stringify({ email, password })
       });
 
@@ -68,12 +98,13 @@ export const AdminAuthProvider = ({ children }) => {
         throw new Error(data.message || 'Login failed');
       }
 
-      // Store token
+      // Store admin info and token in localStorage
+      localStorage.setItem('adminInfo', JSON.stringify(data.admin));
       localStorage.setItem('adminToken', data.token);
-      
+
       // Set admin data
       setAdmin(data.admin);
-      
+
       return { success: true, admin: data.admin };
     } catch (error) {
       setError(error.message);
@@ -86,19 +117,24 @@ export const AdminAuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       const token = localStorage.getItem('adminToken');
+      const headers = {
+        'Content-Type': 'application/json'
+      };
+
       if (token) {
-        await fetch('http://localhost:5000/api/admin/auth/logout', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
+        headers['Authorization'] = `Bearer ${token}`;
       }
+
+      await fetch('http://localhost:5000/api/admin/auth/logout', {
+        method: 'POST',
+        headers,
+        credentials: 'include' // Include cookies
+      });
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
       localStorage.removeItem('adminToken');
+      localStorage.removeItem('adminInfo');
       setAdmin(null);
       setError(null);
     }
@@ -107,14 +143,20 @@ export const AdminAuthProvider = ({ children }) => {
   const updateProfile = async (profileData) => {
     try {
       setError(null);
+
       const token = localStorage.getItem('adminToken');
-      
-      const response = await fetch('http://localhost:5000/api/admin/auth/profile', {
+      const headers = {
+        'Content-Type': 'application/json'
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch('http://localhost:5000/api/admin/profile', {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+        headers,
+        credentials: 'include', // Include cookies
         body: JSON.stringify(profileData)
       });
 
@@ -135,14 +177,20 @@ export const AdminAuthProvider = ({ children }) => {
   const changePassword = async (currentPassword, newPassword) => {
     try {
       setError(null);
+
       const token = localStorage.getItem('adminToken');
-      
-      const response = await fetch('http://localhost:5000/api/admin/auth/password', {
+      const headers = {
+        'Content-Type': 'application/json'
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch('http://localhost:5000/api/admin/auth/change-password', {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+        headers,
+        credentials: 'include', // Include cookies
         body: JSON.stringify({ currentPassword, newPassword })
       });
 
@@ -159,65 +207,47 @@ export const AdminAuthProvider = ({ children }) => {
     }
   };
 
-  // Permission checking based on role
+  // Permission checking based on backend permissions
   const hasPermission = (permission) => {
     if (!admin) return false;
-    
+
     // Master Admin has all permissions
     if (admin.role === 'Master Admin') return true;
-    
-    // Check specific role permissions
-    switch (admin.role) {
-      case 'Content Admin':
-        return ['article:create', 'article:read', 'article:update', 'article:delete', 'article:publish', 'article:unpublish',
-                'media:create', 'media:read', 'media:update', 'media:delete',
-                'category:create', 'category:read', 'category:update', 'category:delete',
-                'user:read', 'analytics:read'].includes(permission);
-        
-      case 'Editor-in-Chief':
-        return ['article:create', 'article:read', 'article:update', 'article:publish', 'article:unpublish',
-                'media:create', 'media:read', 'media:update',
-                'category:read', 'category:update',
-                'user:read', 'analytics:read'].includes(permission);
-        
-      case 'Section Editors':
-        return ['article:create', 'article:read', 'article:update', 'article:publish',
-                'media:create', 'media:read', 'media:update',
-                'category:read', 'category:update',
-                'user:read', 'analytics:read'].includes(permission);
-        
-      case 'Senior Writers':
-      case 'Staff Writers':
-        return ['article:create', 'article:read', 'article:update',
-                'media:create', 'media:read', 'media:update',
-                'category:read', 'analytics:read'].includes(permission);
-        
-      case 'Contributors':
-        return ['article:create', 'article:read',
-                'media:create', 'media:read',
-                'category:read'].includes(permission);
-        
-      case 'Reviewers':
-        return ['article:read', 'article:update',
-                'media:read',
-                'category:read'].includes(permission);
-        
-      case 'Social Media Manager':
-        return ['article:read',
-                'media:read',
-                'social:create', 'social:read', 'social:update', 'social:delete',
-                'analytics:read'].includes(permission);
-        
-      case 'Webmaster':
-        return ['article:read', 'article:update',
-                'media:read', 'media:update',
-                'category:read', 'category:update',
-                'settings:read', 'settings:update',
-                'user:read', 'analytics:read'].includes(permission);
-        
-      default:
-        return false;
+
+    // Check permissions from backend
+    if (admin.permissions) {
+      // Handle different permission formats
+      const permissions = admin.permissions;
+
+      // Check for exact permission match
+      if (permissions[permission]) {
+        return true;
+      }
+
+      // Check for wildcard permissions (e.g., 'content.*' covers 'content.create')
+      const permissionParts = permission.split('.');
+      for (let i = permissionParts.length - 1; i > 0; i--) {
+        const wildcardPermission = permissionParts.slice(0, i).join('.') + '.*';
+        if (permissions[wildcardPermission]) {
+          return true;
+        }
+      }
+
+      // Check category-based permissions
+      for (const category in permissions) {
+        if (Array.isArray(permissions[category])) {
+          if (permissions[category].includes(permission)) {
+            return true;
+          }
+          // Check for wildcard in category
+          if (permissions[category].includes('*')) {
+            return true;
+          }
+        }
+      }
     }
+
+    return false;
   };
 
   const hasRole = (role) => {

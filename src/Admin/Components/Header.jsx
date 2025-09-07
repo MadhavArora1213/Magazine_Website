@@ -1,10 +1,12 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAdminAuth } from "../context/AdminAuthContext";
 import { useTheme } from "../context/ThemeContext";
 
 const Header = ({ onMenuClick }) => {
   const { admin, logout } = useAdminAuth();
   const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
 
@@ -21,13 +23,20 @@ const Header = ({ onMenuClick }) => {
 
   const getRoleBadge = (role) => {
     const roleConfig = {
-      master_admin: { color: "bg-red-500", text: "Master Admin" },
-      content_manager: { color: "bg-blue-500", text: "Content Manager" },
-      editor: { color: "bg-green-500", text: "Editor" }
+      "Master Admin": { color: "bg-red-500", text: "Master Admin" },
+      "Content Admin": { color: "bg-blue-500", text: "Content Admin" },
+      "Editor-in-Chief": { color: "bg-green-500", text: "Editor-in-Chief" },
+      "Section Editors": { color: "bg-yellow-500", text: "Section Editor" },
+      "Senior Writers": { color: "bg-purple-500", text: "Senior Writer" },
+      "Staff Writers": { color: "bg-indigo-500", text: "Staff Writer" },
+      "Contributors": { color: "bg-pink-500", text: "Contributor" },
+      "Reviewers": { color: "bg-orange-500", text: "Reviewer" },
+      "Social Media Manager": { color: "bg-teal-500", text: "Social Media" },
+      "Webmaster": { color: "bg-cyan-500", text: "Webmaster" }
     };
-    
+
     const config = roleConfig[role] || { color: "bg-gray-500", text: "Admin" };
-    
+
     return (
       <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium text-white ${config.color}`}>
         {config.text}
@@ -36,12 +45,12 @@ const Header = ({ onMenuClick }) => {
   };
 
   return (
-    <header className={`${bgMain} border-b ${borderColor} px-4 py-3 flex items-center justify-between transition-colors duration-300`}>
+    <header className={`${bgMain} border-b ${borderColor} px-4 py-2 flex items-center justify-between transition-colors duration-300`}>
       {/* Left Section */}
       <div className="flex items-center space-x-4">
         <button
           onClick={onMenuClick}
-          className={`p-2 rounded-lg ${isDark ? "hover:bg-gray-800" : "hover:bg-gray-100"} transition-colors duration-200`}
+          className={`p-1.5 rounded-lg ${isDark ? "hover:bg-gray-800" : "hover:bg-gray-100"} transition-colors duration-200`}
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -59,7 +68,7 @@ const Header = ({ onMenuClick }) => {
         <div className="relative">
           <button
             onClick={() => setShowThemeMenu(!showThemeMenu)}
-            className={`p-2 rounded-lg ${isDark ? "hover:bg-gray-800" : "hover:bg-gray-100"} transition-colors duration-200`}
+            className={`p-1.5 rounded-lg ${isDark ? "hover:bg-gray-800" : "hover:bg-gray-100"} transition-colors duration-200`}
           >
             {isDark ? (
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -86,7 +95,7 @@ const Header = ({ onMenuClick }) => {
                       toggleTheme();
                       setShowThemeMenu(false);
                     }}
-                    className={`block w-full text-left px-4 py-2 text-sm ${textMain} hover:${isDark ? "bg-gray-800" : "bg-gray-100"} transition-colors duration-200`}
+                    className={`block w-full text-left px-3 py-1.5 text-sm ${textMain} hover:${isDark ? "bg-gray-800" : "bg-gray-100"} transition-colors duration-200`}
                   >
                     {isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
                   </button>
@@ -101,16 +110,16 @@ const Header = ({ onMenuClick }) => {
           <div className="relative">
             <button
               onClick={() => setShowProfileMenu(!showProfileMenu)}
-              className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-800/50 transition-colors duration-200"
+              className="flex items-center space-x-2 p-1.5 rounded-lg hover:bg-gray-800/50 transition-colors duration-200"
             >
-              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+              <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
                 <span className="text-white text-sm font-medium">
-                  {admin.firstName?.charAt(0) || admin.username?.charAt(0) || 'A'}
+                  {admin.name?.charAt(0) || admin.username?.charAt(0) || 'A'}
                 </span>
               </div>
               <div className="hidden md:block text-left">
                 <p className={`text-sm font-medium ${textMain}`}>
-                  {admin.firstName} {admin.lastName}
+                  {admin.name || admin.username || 'Admin'}
                 </p>
                 {getRoleBadge(admin.role)}
               </div>
@@ -127,16 +136,16 @@ const Header = ({ onMenuClick }) => {
                   onClick={() => setShowProfileMenu(false)}
                 />
                 <div className={`absolute right-0 mt-2 w-64 ${menuBg} rounded-lg shadow-lg border ${borderColor} z-20`}>
-                  <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                  <div className="p-3 border-b border-gray-200 dark:border-gray-700">
                     <div className="flex items-center space-x-3">
-                      <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
+                      <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
                         <span className="text-white text-lg font-medium">
-                          {admin.firstName?.charAt(0) || admin.username?.charAt(0) || 'A'}
+                          {admin.name?.charAt(0) || admin.username?.charAt(0) || 'A'}
                         </span>
                       </div>
                       <div>
                         <p className={`text-sm font-medium ${textMain}`}>
-                          {admin.firstName} {admin.lastName}
+                          {admin.name || admin.username || 'Admin'}
                         </p>
                         <p className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>
                           {admin.email}
@@ -149,10 +158,10 @@ const Header = ({ onMenuClick }) => {
                   <div className="py-1">
                     <button
                       onClick={() => {
-                        // TODO: Navigate to profile page
+                        navigate('/admin/profile');
                         setShowProfileMenu(false);
                       }}
-                      className={`block w-full text-left px-4 py-2 text-sm ${textMain} hover:${isDark ? "bg-gray-800" : "bg-gray-100"} transition-colors duration-200`}
+                      className={`block w-full text-left px-3 py-1.5 text-sm ${textMain} hover:${isDark ? "bg-gray-800" : "bg-gray-100"} transition-colors duration-200`}
                     >
                       <div className="flex items-center space-x-2">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -164,7 +173,7 @@ const Header = ({ onMenuClick }) => {
                     
                     <button
                       onClick={handleLogout}
-                      className={`block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200`}
+                      className={`block w-full text-left px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200`}
                     >
                       <div className="flex items-center space-x-2">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
