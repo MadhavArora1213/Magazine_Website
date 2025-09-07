@@ -71,6 +71,7 @@ const CreateVideoArticle = () => {
   const bgMain = isDark ? 'bg-black' : 'bg-white';
   const textMain = isDark ? 'text-white' : 'text-black';
   const cardBg = isDark ? 'bg-gray-900 border-white/10' : 'bg-white border-black/10';
+  const inputBg = isDark ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-black';
 
   useEffect(() => {
     fetchInitialData();
@@ -798,7 +799,138 @@ const CreateVideoArticle = () => {
               </div>
             </div>
 
-            {/* SEO */}
+            {/* Tags */}
+            <div className="mb-6">
+              <h3 className={`text-lg font-semibold ${textMain} mb-4`}>
+                Tags <span className="text-red-500">*</span>
+              </h3>
+
+              {/* Category Tags */}
+              {categories.length > 0 && formData.categoryId && (
+                <div className="mb-4">
+                  <label className={`block text-sm font-medium ${textMain} mb-2`}>
+                    Suggested Tags ({categories.find(c => c.id == formData.categoryId)?.name})
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {tags.filter(tag => tag.categoryId === formData.categoryId).slice(0, 10).map(tag => (
+                      <button
+                        key={tag.id}
+                        type="button"
+                        onClick={() => handleTagChange(tag.id)}
+                        className={`px-3 py-1 text-sm rounded-full border transition-colors ${
+                          formData.tags.includes(tag.id)
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : `${isDark ? 'border-gray-600 hover:bg-gray-800' : 'border-gray-300 hover:bg-gray-50'}`
+                        }`}
+                      >
+                        {tag.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* All Tags Suggestions */}
+              {tags.length > 0 && (
+                <div className="mb-4">
+                  <label className={`block text-sm font-medium ${textMain} mb-2`}>
+                    All Available Tags
+                  </label>
+                  <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+                    {tags.slice(0, 20).map(tag => (
+                      <button
+                        key={tag.id}
+                        type="button"
+                        onClick={() => handleTagChange(tag.id)}
+                        className={`px-3 py-1 text-sm rounded-full border transition-colors ${
+                          formData.tags.includes(tag.id)
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : `${isDark ? 'border-gray-600 hover:bg-gray-700' : 'border-gray-300 hover:bg-gray-100'}`
+                        }`}
+                      >
+                        {tag.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Custom Tags Input */}
+              <div className="mb-4">
+                <label className={`block text-sm font-medium ${textMain} mb-2`}>
+                  Add Custom Tags (Press Enter or comma to add)
+                </label>
+                <input
+                  type="text"
+                  value={formData.custom_tags || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, custom_tags: e.target.value }))}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ',') {
+                      e.preventDefault();
+                      const newTag = e.target.value.trim().toLowerCase();
+                      if (newTag && !formData.tags.some(tagId => {
+                        const tag = tags.find(t => t.id === tagId);
+                        return tag && tag.name.toLowerCase() === newTag;
+                      })) {
+                        // Create a temporary tag object for custom tags
+                        const customTag = {
+                          id: `custom_${Date.now()}_${Math.random()}`,
+                          name: newTag,
+                          isCustom: true
+                        };
+                        setTags(prev => [...prev, customTag]);
+                        setFormData(prev => ({
+                          ...prev,
+                          tags: [...prev.tags, customTag.id],
+                          custom_tags: ''
+                        }));
+                      }
+                    }
+                  }}
+                  className={`w-full p-3 border rounded-lg ${inputBg}`}
+                  placeholder="Type tag and press Enter..."
+                />
+                <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
+                  Press Enter or comma to add multiple tags
+                </div>
+              </div>
+
+              {/* Selected Tags */}
+              {formData.tags.length > 0 && (
+                <div className="mt-4">
+                  <label className={`block text-sm font-medium ${textMain} mb-2`}>
+                    Selected Tags ({formData.tags.length})
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {formData.tags.map(tagId => {
+                      const tag = tags.find(t => t.id === tagId);
+                      return tag ? (
+                        <span
+                          key={tagId}
+                          className="px-3 py-1 bg-blue-600 text-white text-sm rounded-full flex items-center gap-2"
+                        >
+                          {tag.name}
+                          <button
+                            type="button"
+                            onClick={() => handleTagChange(tagId)}
+                            className="hover:bg-blue-700 rounded-full p-1"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ) : null;
+                    })}
+                  </div>
+                  {formData.tags.length < 3 && (
+                    <p className="text-red-500 text-sm mt-2">
+                      At least 3 tags are required
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* SEO Settings */}
             <div className="mb-6">
               <h3 className={`text-lg font-semibold ${textMain} mb-4`}>SEO Settings</h3>
               <div className="space-y-4">
@@ -846,53 +978,6 @@ const CreateVideoArticle = () => {
                   />
                   <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                     Enter each keyword on a separate line
-                  </p>
-                </div>
-                <div>
-                  <label className={`block text-sm font-medium ${textMain} mb-2`}>
-                    Tags
-                  </label>
-                  <div className={`border rounded-lg p-3 ${isDark ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'}`}>
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {Array.isArray(formData.tags) && formData.tags.map(tagId => {
-                        const tag = tags.find(t => t.id === tagId);
-                        return tag ? (
-                          <span
-                            key={tagId}
-                            className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800"
-                          >
-                            {tag.name}
-                            <button
-                              type="button"
-                              onClick={() => handleTagChange(tagId)}
-                              className="ml-1 text-blue-600 hover:text-blue-800"
-                            >
-                              ×
-                            </button>
-                          </span>
-                        ) : null;
-                      })}
-                    </div>
-                    <select
-                      onChange={(e) => {
-                        const tagId = e.target.value;
-                        if (tagId && !formData.tags.includes(tagId)) {
-                          handleTagChange(tagId);
-                        }
-                        e.target.value = '';
-                      }}
-                      className={`w-full p-2 border rounded ${isDark ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
-                    >
-                      <option value="">Select tags to add...</option>
-                      {tags.filter(tag => !formData.tags.includes(tag.id)).map(tag => (
-                        <option key={tag.id} value={tag.id}>
-                          {tag.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                    Select tags from the dropdown to associate with this article
                   </p>
                 </div>
               </div>

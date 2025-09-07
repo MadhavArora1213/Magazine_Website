@@ -94,36 +94,36 @@ const EditArticle = () => {
         const articleData = response.data;
         setArticle(articleData);
 
-        // Populate form with existing data
-        setFormData({
+        // Populate form with existing data, preserving any unsaved changes
+        setFormData(prevFormData => ({
            title: articleData.title || '',
-           subtitle: articleData.subtitle || '',
-           content: articleData.content || '',
-           excerpt: articleData.excerpt || '',
-           description: articleData.description || '',
-           categoryId: articleData.categoryId || '',
-           subcategoryId: articleData.subcategoryId || '',
-           authorId: articleData.authorId || '',
-           coAuthors: articleData.coAuthors || [],
-           tags: articleData.tags || [],
-           featured: articleData.featured || false,
-           heroSlider: articleData.heroSlider || false,
-           trending: articleData.trending || false,
-           pinned: articleData.pinned || false,
-           allowComments: articleData.allowComments !== false,
-           metaTitle: articleData.metaTitle || '',
-           metaDescription: articleData.metaDescription || '',
-           keywords: articleData.keywords || [],
-           publishDate: articleData.publishDate
-             ? new Date(articleData.publishDate).toISOString().slice(0, -1)
-             : '',
-           featuredImage: null,
-           imageCaption: articleData.imageCaption || '',
-           authorBioOverride: articleData.authorBioOverride || '',
-           status: articleData.status || 'draft',
-           custom_tags: '',
-           reviewNotes: articleData.reviewNotes || ''
-         });
+            subtitle: articleData.subtitle || '',
+            content: articleData.content || '',
+            excerpt: articleData.excerpt || '',
+            description: articleData.description || '',
+            categoryId: articleData.categoryId || '',
+            subcategoryId: articleData.subcategoryId || '',
+            authorId: articleData.authorId || '',
+            coAuthors: articleData.coAuthors || [],
+            tags: articleData.tags || [],
+            featured: articleData.featured || false,
+            heroSlider: articleData.heroSlider || false,
+            trending: articleData.trending || false,
+            pinned: articleData.pinned || false,
+            allowComments: articleData.allowComments !== false,
+            metaTitle: articleData.metaTitle || '',
+            metaDescription: articleData.metaDescription || '',
+            keywords: articleData.keywords || [],
+            publishDate: articleData.publishDate
+              ? new Date(articleData.publishDate).toISOString().slice(0, -1)
+              : '',
+            featuredImage: prevFormData.featuredImage, // Preserve uploaded file
+            imageCaption: articleData.imageCaption || '',
+            authorBioOverride: articleData.authorBioOverride || '',
+            status: articleData.status || 'draft',
+            custom_tags: prevFormData.custom_tags || '', // Preserve custom tags input
+            reviewNotes: articleData.reviewNotes || ''
+          }));
 
         showSuccess('Article loaded successfully');
       } else {
@@ -293,6 +293,20 @@ const EditArticle = () => {
       const response = await articleService.updateArticle(id, submitData);
 
       if (response.success) {
+        // Update the article state with the response data
+        if (response.data) {
+          setArticle(response.data);
+          // Update form data with server response to ensure consistency
+          setFormData(prevFormData => ({
+            ...prevFormData,
+            status: response.data.status || prevFormData.status,
+            reviewNotes: response.data.reviewNotes || prevFormData.reviewNotes,
+            // Preserve any local changes that weren't sent to server
+            featuredImage: prevFormData.featuredImage,
+            custom_tags: prevFormData.custom_tags
+          }));
+        }
+
         // More specific success messages based on status
         let successMessage = '';
         switch (statusToSave) {
@@ -325,6 +339,7 @@ const EditArticle = () => {
         }
 
         showSuccess(successMessage);
+        // Fetch fresh data from server to ensure UI is in sync
         fetchArticle();
       }
     } catch (error) {

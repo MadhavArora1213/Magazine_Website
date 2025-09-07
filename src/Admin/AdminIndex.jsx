@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { AdminAuthProvider, useAdminAuth } from "./context/AdminAuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { ToastProvider } from "../context/ToastContext";
+import { VideoArticleProvider } from "../context/VideoArticleContext";
 import ToastContainer from "../Components/ToastContainer";
 import AdminLogin from "./Components/AdminLogin";
 import Dashboard from "./Dashboard";
@@ -208,15 +209,17 @@ function AdminIndex() {
     <ToastProvider>
       <ThemeProvider>
         <AdminAuthProvider>
-          <Routes>
-            <Route path="/login" element={<AdminLogin />} />
-            <Route path="/*" element={
-              <ProtectedRoute>
-                <MainLayout />
-              </ProtectedRoute>
-            } />
-          </Routes>
-          <ToastContainer />
+          <VideoArticleProvider>
+            <Routes>
+              <Route path="/login" element={<AdminLogin />} />
+              <Route path="/*" element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              } />
+            </Routes>
+            <ToastContainer />
+          </VideoArticleProvider>
         </AdminAuthProvider>
       </ThemeProvider>
     </ToastProvider>

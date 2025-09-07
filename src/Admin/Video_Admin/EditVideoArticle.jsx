@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useAdminAuth } from '../context/AdminAuthContext';
+import { useVideoArticleContext } from '../../context/VideoArticleContext';
 import videoArticleService from '../../services/videoArticleService';
 import categoryService from '../services/categoryService';
 import { toast } from 'react-toastify';
@@ -21,6 +22,7 @@ const EditVideoArticle = () => {
   const { id } = useParams();
   const { theme } = useTheme();
   const { admin, isMasterAdmin } = useAdminAuth();
+  const { updateVideoArticle, refreshData } = useVideoArticleContext();
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [categories, setCategories] = useState([]);
@@ -51,6 +53,7 @@ const EditVideoArticle = () => {
     metaDescription: '',
     keywords: [],
     tags: [],
+    custom_tags: '',
     status: 'draft',
     workflowStage: 'creation',
     publishDate: '',
@@ -67,6 +70,7 @@ const EditVideoArticle = () => {
   const bgMain = isDark ? 'bg-black' : 'bg-white';
   const textMain = isDark ? 'text-white' : 'text-black';
   const cardBg = isDark ? 'bg-gray-900 border-white/10' : 'bg-white border-black/10';
+  const inputBg = isDark ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-black';
 
   useEffect(() => {
     fetchInitialData();
@@ -210,9 +214,37 @@ const EditVideoArticle = () => {
     }));
   };
 
+  const handleCustomTags = (e) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      const newTag = e.target.value.trim().toLowerCase();
+      if (newTag && !formData.tags.includes(newTag)) {
+        setFormData(prev => ({
+          ...prev,
+          tags: [...prev.tags, newTag],
+          custom_tags: ''
+        }));
+      }
+    } else {
+      setFormData(prev => ({ ...prev, custom_tags: e.target.value }));
+    }
+  };
+
+  const removeTag = (tagToRemove) => {
+    setFormData(prev => ({
+      ...prev,
+      tags: prev.tags.filter(tag => tag !== tagToRemove)
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+
+    console.log('=== FRONTEND EDIT VIDEO ARTICLE SUBMIT START ===');
+    console.log('Video Article ID:', id);
+    console.log('Form data before submit:', JSON.stringify(formData, null, 2));
+    console.log('Featured image:', featuredImage);
 
     try {
       const submitData = {
@@ -220,18 +252,35 @@ const EditVideoArticle = () => {
         featuredImage: featuredImage
       };
 
-      const response = await videoArticleService.updateVideoArticle(id, submitData);
+      console.log('=== SUBMIT DATA PREPARED ===');
+      console.log('Submit data:', JSON.stringify(submitData, null, 2));
 
-      if (response.success) {
-        toast.success('Video article updated successfully');
+      const result = await updateVideoArticle(id, submitData);
+
+      console.log('=== UPDATE RESULT RECEIVED ===');
+      console.log('Update result:', result);
+
+      if (result.success) {
+        console.log('=== UPDATE SUCCESSFUL - NAVIGATING BACK ===');
+        // The context already handles the success message and state update
+        // Just navigate back to the list
         navigate('/admin/video-articles');
       } else {
-        toast.error('Failed to update video article');
+        console.log('=== UPDATE FAILED ===');
+        console.error('Update failed:', result.error);
+        // The context already handles the error message
       }
     } catch (error) {
+      console.log('=== UPDATE ERROR CAUGHT ===');
       console.error('Error updating video article:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        response: error.response?.data
+      });
       toast.error(error.message || 'Failed to update video article');
     } finally {
+      console.log('=== SUBMIT PROCESS END ===');
       setLoading(false);
     }
   };
@@ -283,7 +332,7 @@ const EditVideoArticle = () => {
                 formData.status === 'rejected' ? 'bg-red-100 text-red-800' :
                 'bg-gray-100 text-gray-800'
               }`}>
-                {formData.status.replace('_', ' ').toUpperCase()}
+                {(formData.status || 'draft').replace('_', ' ').toUpperCase()}
               </div>
               <div className={`px-3 py-1 rounded-full text-sm font-medium ${
                 formData.priority === 'urgent' ? 'bg-red-100 text-red-800' :
@@ -291,7 +340,7 @@ const EditVideoArticle = () => {
                 formData.priority === 'normal' ? 'bg-blue-100 text-blue-800' :
                 'bg-gray-100 text-gray-800'
               }`}>
-                {formData.priority.toUpperCase()} PRIORITY
+                {(formData.priority || 'normal').toUpperCase()} PRIORITY
               </div>
             </div>
             {formData.deadline && (
@@ -934,50 +983,111 @@ const EditVideoArticle = () => {
                 </div>
                 <div>
                   <label className={`block text-sm font-medium ${textMain} mb-2`}>
-                    Tags
+                    Tags <span className="text-red-500">*</span>
                   </label>
-                  <div className={`border rounded-lg p-3 ${isDark ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'}`}>
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {Array.isArray(formData.tags) && formData.tags.map(tagId => {
-                        const tag = tags.find(t => t.id === tagId);
-                        return tag ? (
-                          <span
-                            key={tagId}
-                            className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800"
+
+                  {/* Category Tags */}
+                  {formData.categoryId && (
+                    <div className="mb-4">
+                      <label className={`block text-sm font-medium ${textMain} mb-2`}>
+                        Suggested Tags ({categories.find(c => c.id == formData.categoryId)?.name})
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {tags.filter(tag => tag.categoryId === formData.categoryId).map(tag => (
+                          <button
+                            key={tag.id}
+                            type="button"
+                            onClick={() => handleTagChange(tag.id)}
+                            className={`px-3 py-1 text-sm rounded-full border transition-colors ${
+                              formData.tags.includes(tag.id)
+                                ? 'bg-blue-600 text-white border-blue-600'
+                                : `${isDark ? 'border-gray-600 hover:bg-gray-800' : 'border-gray-300 hover:bg-gray-50'}`
+                            }`}
                           >
                             {tag.name}
-                            <button
-                              type="button"
-                              onClick={() => handleTagChange(tagId)}
-                              className="ml-1 text-blue-600 hover:text-blue-800"
-                            >
-                              ×
-                            </button>
-                          </span>
-                        ) : null;
-                      })}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                    <select
-                      onChange={(e) => {
-                        const tagId = e.target.value;
-                        if (tagId && !formData.tags.includes(tagId)) {
-                          handleTagChange(tagId);
-                        }
-                        e.target.value = '';
-                      }}
-                      className={`w-full p-2 border rounded ${isDark ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
-                    >
-                      <option value="">Select tags to add...</option>
-                      {tags.filter(tag => !formData.tags.includes(tag.id)).map(tag => (
-                        <option key={tag.id} value={tag.id}>
+                  )}
+
+                  {/* All Tags Suggestions */}
+                  <div className="mb-4">
+                    <label className={`block text-sm font-medium ${textMain} mb-2`}>
+                      All Available Tags
+                    </label>
+                    <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+                      {tags.slice(0, 20).map(tag => (
+                        <button
+                          key={tag.id}
+                          type="button"
+                          onClick={() => handleTagChange(tag.id)}
+                          className={`px-3 py-1 text-sm rounded-full border transition-colors ${
+                            formData.tags.includes(tag.id)
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : `${isDark ? 'border-gray-600 hover:bg-gray-700' : 'border-gray-300 hover:bg-gray-100'}`
+                          }`}
+                        >
                           {tag.name}
-                        </option>
+                        </button>
                       ))}
-                    </select>
+                    </div>
                   </div>
-                  <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                    Select tags from the dropdown to associate with this article
-                  </p>
+
+                  {/* Custom Tags Input */}
+                  <div className="mb-4">
+                    <label className={`block text-sm font-medium ${textMain} mb-2`}>
+                      Add Custom Tags
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={formData.custom_tags}
+                        onChange={handleCustomTags}
+                        onKeyDown={handleCustomTags}
+                        className={`flex-1 p-3 border rounded-lg ${inputBg}`}
+                        placeholder="Type tag and press Enter or comma..."
+                      />
+                    </div>
+                    <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
+                      Press Enter or comma to add multiple tags
+                    </div>
+                  </div>
+
+                  {/* Selected Tags */}
+                  {formData.tags.length > 0 && (
+                    <div className="mt-4">
+                      <label className={`block text-sm font-medium ${textMain} mb-2`}>
+                        Selected Tags ({formData.tags.length})
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {formData.tags.map(tag => {
+                          const tagObj = tags.find(t => t.id === tag);
+                          const tagName = tagObj ? tagObj.name : tag;
+                          return (
+                            <span
+                              key={tag}
+                              className="px-3 py-1 bg-blue-600 text-white text-sm rounded-full flex items-center gap-2"
+                            >
+                              {tagName}
+                              <button
+                                type="button"
+                                onClick={() => removeTag(tag)}
+                                className="hover:bg-blue-700 rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                              >
+                                ×
+                              </button>
+                            </span>
+                          );
+                        })}
+                      </div>
+                      {formData.tags.length < 3 && (
+                        <p className="text-red-500 text-sm mt-2">
+                          At least 3 tags are required for publication
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1010,7 +1120,7 @@ const EditVideoArticle = () => {
                   }`}></div>
                   <div className={`text-sm ${textMain}`}>
                     <span className="font-medium">
-                      Status changed to {formData.status.replace('_', ' ').toUpperCase()}
+                      Status changed to {(formData.status || 'draft').replace('_', ' ').toUpperCase()}
                     </span>
                     <span className="text-gray-500 ml-2">
                       {new Date().toLocaleString()}

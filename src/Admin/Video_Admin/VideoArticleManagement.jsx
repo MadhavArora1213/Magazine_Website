@@ -1,28 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
+import { useAdminAuth } from '../context/AdminAuthContext';
+import { useVideoArticleContext } from '../../context/VideoArticleContext';
 import videoArticleService from '../../services/videoArticleService';
 import categoryService from '../services/categoryService';
 import { toast } from 'react-toastify';
 
 const VideoArticleManagement = () => {
   const { theme } = useTheme();
-  const [videoArticles, setVideoArticles] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const { isMasterAdmin } = useAdminAuth();
+  const {
+    videoArticles,
+    loading,
+    filters,
+    pagination,
+    fetchVideoArticles,
+    updateFilters,
+    updatePagination
+  } = useVideoArticleContext();
+
   const [categories, setCategories] = useState([]);
   const [authors, setAuthors] = useState([]);
   const [filterDataLoading, setFilterDataLoading] = useState(true);
-  const [filters, setFilters] = useState({
-    status: 'all',
-    category: 'all',
-    author: 'all',
-    search: ''
-  });
-  const [pagination, setPagination] = useState({
-    current_page: 1,
-    total_pages: 1,
-    total_items: 0
-  });
 
   const isDark = theme === 'dark';
   const bgMain = isDark ? 'bg-black' : 'bg-white';
@@ -31,7 +31,7 @@ const VideoArticleManagement = () => {
 
   useEffect(() => {
     fetchVideoArticles();
-  }, [filters, pagination.current_page]);
+  }, [filters, pagination.current_page, fetchVideoArticles]);
 
   useEffect(() => {
     const loadFilterData = async () => {
@@ -47,44 +47,6 @@ const VideoArticleManagement = () => {
 
     loadFilterData();
   }, []);
-
-  const fetchVideoArticles = async () => {
-    try {
-      setLoading(true);
-
-      // Prepare query parameters
-      const params = {
-        page: pagination.current_page,
-        limit: 10
-      };
-
-      // Add filters only if they have values and are not 'all'
-      if (filters.status !== 'all') params.status = filters.status;
-      if (filters.category !== 'all') params.category_id = filters.category;
-      if (filters.author !== 'all') params.author_id = filters.author;
-      if (filters.search) params.search = filters.search;
-
-      const response = await videoArticleService.getAllVideoArticles(params);
-
-      if (response.success) {
-        setVideoArticles(response.data.videoArticles || []);
-        setPagination(response.data.pagination || {
-          current_page: 1,
-          total_pages: 1,
-          total_items: 0
-        });
-      } else {
-        setVideoArticles([]);
-        toast.error('Failed to fetch video articles');
-      }
-    } catch (error) {
-      console.error('Error fetching video articles:', error);
-      setVideoArticles([]);
-      toast.error('Failed to fetch video articles');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const fetchCategories = async () => {
     try {
@@ -126,7 +88,7 @@ const VideoArticleManagement = () => {
 
       if (response.success) {
         toast.success(`Video article status updated to ${newStatus}`);
-        fetchVideoArticles();
+        fetchVideoArticles(); // Refresh the list from context
       }
     } catch (error) {
       toast.error('Failed to update video article status');
@@ -139,7 +101,7 @@ const VideoArticleManagement = () => {
         const response = await videoArticleService.deleteVideoArticle(videoArticleId);
         if (response.success) {
           toast.success('Video article deleted successfully');
-          fetchVideoArticles();
+          fetchVideoArticles(); // Refresh the list from context
         }
       } catch (error) {
         toast.error('Failed to delete video article');
@@ -279,12 +241,12 @@ const VideoArticleManagement = () => {
               type="text"
               placeholder="Search video articles..."
               value={filters.search}
-              onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+              onChange={(e) => updateFilters({ search: e.target.value })}
               className={`p-2 border rounded ${isDark ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
             />
             <select
               value={filters.status}
-              onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+              onChange={(e) => updateFilters({ status: e.target.value })}
               className={`p-2 border rounded ${isDark ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
             >
               <option value="all">All Status</option>
@@ -299,7 +261,7 @@ const VideoArticleManagement = () => {
             </select>
             <select
               value={filters.category}
-              onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
+              onChange={(e) => updateFilters({ category: e.target.value })}
               className={`p-2 border rounded ${isDark ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
             >
               <option value="all">All Categories</option>
@@ -317,7 +279,7 @@ const VideoArticleManagement = () => {
             </select>
             <select
               value={filters.author}
-              onChange={(e) => setFilters(prev => ({ ...prev, author: e.target.value }))}
+              onChange={(e) => updateFilters({ author: e.target.value })}
               className={`p-2 border rounded ${isDark ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
             >
               <option value="all">All Authors</option>
@@ -416,12 +378,19 @@ const VideoArticleManagement = () => {
                           {new Date(videoArticle.createdAt).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                          <Link
-                            to={`/admin/video-articles/edit/${videoArticle.id}`}
-                            className="text-blue-600 hover:text-blue-900"
-                          >
-                            Edit
-                          </Link>
+                          {(isMasterAdmin() || videoArticle.status !== 'published') && (
+                            <Link
+                              to={`/admin/video-articles/edit/${videoArticle.id}`}
+                              className="text-blue-600 hover:text-blue-900"
+                            >
+                              Edit
+                            </Link>
+                          )}
+                          {(!isMasterAdmin() && videoArticle.status === 'published') && (
+                            <span className="text-gray-400 cursor-not-allowed">
+                              Edit (Published)
+                            </span>
+                          )}
                           <button
                             onClick={() => {
                               setSelectedVideoArticle(videoArticle);
@@ -456,7 +425,7 @@ const VideoArticleManagement = () => {
             <div className="flex space-x-2">
               {pagination.current_page > 1 && (
                 <button
-                  onClick={() => setPagination(prev => ({ ...prev, current_page: prev.current_page - 1 }))}
+                  onClick={() => updatePagination({ current_page: pagination.current_page - 1 })}
                   className={`px-3 py-1 border rounded ${isDark ? 'border-gray-600 hover:bg-gray-800' : 'border-gray-300 hover:bg-gray-50'}`}
                 >
                   Previous
@@ -464,7 +433,7 @@ const VideoArticleManagement = () => {
               )}
               {pagination.current_page < pagination.total_pages && (
                 <button
-                  onClick={() => setPagination(prev => ({ ...prev, current_page: prev.current_page + 1 }))}
+                  onClick={() => updatePagination({ current_page: pagination.current_page + 1 })}
                   className={`px-3 py-1 border rounded ${isDark ? 'border-gray-600 hover:bg-gray-800' : 'border-gray-300 hover:bg-gray-50'}`}
                 >
                   Next

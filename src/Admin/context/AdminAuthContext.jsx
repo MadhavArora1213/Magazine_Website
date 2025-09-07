@@ -252,7 +252,7 @@ export const AdminAuthProvider = ({ children }) => {
 
   const hasRole = (role) => {
     if (!admin) return false;
-    return admin.role === role;
+    return admin.role?.name === role;
   };
 
   // Role-based access control

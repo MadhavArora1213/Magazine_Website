@@ -40,7 +40,7 @@ class VideoArticleService {
         allowComments: 'allow_comments',
         metaTitle: 'meta_title',
         metaDescription: 'meta_description',
-        publishDate: 'scheduled_publish_date',
+        scheduledPublishDate: 'scheduled_publish_date',
         imageCaption: 'featured_image_caption',
         authorBioOverride: 'author_bio_override',
         reviewNotes: 'review_notes',
@@ -85,6 +85,14 @@ class VideoArticleService {
 
   // Update video article
   async updateVideoArticle(id, videoArticleData) {
+    console.log('=== SERVICE UPDATE VIDEO ARTICLE START ===');
+    console.log('Video Article ID:', id);
+    console.log('Input data keys:', Object.keys(videoArticleData));
+    console.log('Input title:', videoArticleData.title);
+    console.log('Input metaTitle:', videoArticleData.metaTitle);
+    console.log('Input priority:', videoArticleData.priority);
+    console.log('Input data:', JSON.stringify(videoArticleData, null, 2));
+
     try {
       const formData = new FormData();
 
@@ -101,13 +109,15 @@ class VideoArticleService {
         allowComments: 'allow_comments',
         metaTitle: 'meta_title',
         metaDescription: 'meta_description',
-        publishDate: 'scheduled_publish_date',
+        scheduledPublishDate: 'scheduled_publish_date',
         imageCaption: 'featured_image_caption',
         authorBioOverride: 'author_bio_override',
         reviewNotes: 'review_notes',
         youtubeUrl: 'youtube_url',
         videoType: 'video_type'
       };
+
+      console.log('=== BUILDING FORM DATA ===');
 
       // Add text fields with proper field name mapping
       Object.keys(videoArticleData).forEach(key => {
@@ -116,9 +126,12 @@ class VideoArticleService {
           const fieldName = fieldMapping[key] || key;
 
           if (typeof videoArticleData[key] === 'object') {
-            formData.append(fieldName, JSON.stringify(videoArticleData[key]));
+            const jsonValue = JSON.stringify(videoArticleData[key]);
+            formData.append(fieldName, jsonValue);
+            console.log(`Added JSON field: ${fieldName} = ${jsonValue}`);
           } else {
             formData.append(fieldName, videoArticleData[key]);
+            console.log(`Added field: ${fieldName} = ${videoArticleData[key]}`);
           }
         }
       });
@@ -126,15 +139,40 @@ class VideoArticleService {
       // Add file if exists
       if (videoArticleData.featuredImage instanceof File) {
         formData.append('featured_image', videoArticleData.featuredImage);
+        console.log('Added featured image file:', videoArticleData.featuredImage.name);
+      } else {
+        console.log('No featured image file to add');
       }
+
+      console.log('=== FORM DATA BUILT - SENDING REQUEST ===');
+      console.log('Final form data entries:');
+      for (let [key, value] of formData.entries()) {
+        console.log(`${key}: ${value} (type: ${typeof value})`);
+      }
+      console.log('=== CONFIRMING KEY FIELDS BEFORE API CALL ===');
+      console.log('FormData title:', formData.get('title'));
+      console.log('FormData metaTitle:', formData.get('metaTitle'));
+      console.log('FormData priority:', formData.get('priority'));
 
       const response = await api.put(`/video-articles/${id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
+
+      console.log('=== API RESPONSE RECEIVED ===');
+      console.log('Response status:', response.status);
+      console.log('Response data:', response.data);
+
       return response.data;
     } catch (error) {
+      console.log('=== SERVICE UPDATE ERROR ===');
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        headers: error.response?.headers
+      });
       throw new Error(error.response?.data?.message || 'Failed to update video article');
     }
   }

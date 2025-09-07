@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
+import { useAdminAuth } from '../context/AdminAuthContext';
 import articleService from '../../services/articleService';
 import categoryService from '../services/categoryService';
 import { toast } from 'react-toastify';
 
 const ArticleManagement = () => {
   const { theme } = useTheme();
+  const { isMasterAdmin } = useAdminAuth();
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
@@ -323,19 +325,26 @@ const ArticleManagement = () => {
                           {new Date(article.createdAt).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                          <Link
-                            to={`/admin/articles/edit/${article.id}`}
-                            className="text-blue-600 hover:text-blue-900"
-                          >
-                            Edit
-                          </Link>
-                          <button
-                            onClick={() => deleteArticle(article.id)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            Delete
-                          </button>
-                        </td>
+                           {(isMasterAdmin() || article.status !== 'published') && (
+                             <Link
+                               to={`/admin/articles/edit/${article.id}`}
+                               className="text-blue-600 hover:text-blue-900"
+                             >
+                               Edit
+                             </Link>
+                           )}
+                           {(!isMasterAdmin() && article.status === 'published') && (
+                             <span className="text-gray-400 cursor-not-allowed">
+                               Edit (Published)
+                             </span>
+                           )}
+                           <button
+                             onClick={() => deleteArticle(article.id)}
+                             className="text-red-600 hover:text-red-900"
+                           >
+                             Delete
+                           </button>
+                         </td>
                       </tr>
                     ))
                   )}
